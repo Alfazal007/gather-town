@@ -8,8 +8,10 @@ import (
 )
 
 type EnvVariables struct {
-	Port        string
-	DatabaseUrl string
+	Port               string
+	DatabaseUrl        string
+	AccessTokenSecret  string
+	RefreshTokenSecret string
 }
 
 func LoadEnvVariables() *EnvVariables {
@@ -19,9 +21,13 @@ func LoadEnvVariables() *EnvVariables {
 	}
 	port := os.Getenv("PORT")
 	dbUrl := os.Getenv("DATABASE_URL")
+	accessToken := os.Getenv("ACCESS_TOKEN_SECRET")
+	refreshToken := os.Getenv("REFRESH_TOKEN_SECRET")
 
 	return &EnvVariables{
-		Port:        port,
-		DatabaseUrl: dbUrl,
+		Port:               port,
+		DatabaseUrl:        dbUrl,
+		AccessTokenSecret:  accessToken,
+		RefreshTokenSecret: refreshToken,
 	}
 }

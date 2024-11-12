@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -69,5 +70,71 @@ func (q *Queries) FindUsernameOrEmail(ctx context.Context, arg FindUsernameOrEma
 	row := q.db.QueryRowContext(ctx, findUsernameOrEmail, arg.Username, arg.Email)
 	var i FindUsernameOrEmailRow
 	err := row.Scan(&i.Username, &i.Email)
+	return i, err
+}
+
+const findUsernameOrEmailForLogin = `-- name: FindUsernameOrEmailForLogin :one
+select id, username, password, email, refresh_token, role, created_at, updated_at from users
+    where username=$1 or email=$1
+`
+
+func (q *Queries) FindUsernameOrEmailForLogin(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, findUsernameOrEmailForLogin, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.RefreshToken,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByName = `-- name: GetUserByName :one
+select id, username, password, email, refresh_token, role, created_at, updated_at from users where username=$1
+`
+
+func (q *Queries) GetUserByName(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByName, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.RefreshToken,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateRefreshToken = `-- name: UpdateRefreshToken :one
+update users set refresh_token=$1 where username=$2 returning id, username, password, email, refresh_token, role, created_at, updated_at
+`
+
+type UpdateRefreshTokenParams struct {
+	RefreshToken sql.NullString
+	Username     string
+}
+
+func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateRefreshToken, arg.RefreshToken, arg.Username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.RefreshToken,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/Alfazal007/gather-town/helpers"
 	"github.com/Alfazal007/gather-town/internal/database"
 	"github.com/Alfazal007/gather-town/types"
+	"github.com/Alfazal007/gather-town/utils"
 	"github.com/Alfazal007/gather-town/validators"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -58,11 +59,16 @@ func (apiCfg *ApiConf) Signup(w http.ResponseWriter, r *http.Request) {
 		helpers.RespondWithError(w, 400, "User with this email exists", []string{})
 		return
 	}
+	hashedPassword, err := utils.HashPassword(signUpParams.Password)
+	if err != nil {
+		helpers.RespondWithError(w, 400, "Issue hashing the passowrd", []string{})
+		return
+	}
 	createdUser, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        uuid.New(),
 		Username:  signUpParams.Username,
 		Email:     signUpParams.Email,
-		Password:  signUpParams.Password, // TODO:: need to hash this password
+		Password:  hashedPassword,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	})
