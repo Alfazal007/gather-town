@@ -6,8 +6,8 @@ create table users (
     username text not null unique,
     password text not null,
     email text not null unique,
-    refresh_token text,
-    role user_role,
+    refresh_token text default '',
+    role user_role default 'user',
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );

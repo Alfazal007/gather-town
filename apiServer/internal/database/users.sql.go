@@ -13,9 +13,9 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-insert into users 
-    (id, username, email, password, role, created_at, updated_at) 
-        values ($1, $2, $3, $4, $5, $6, $7) returning id, username, password, email, refresh_token, role, created_at, updated_at
+insert into users
+    (id, username, email, password, created_at, updated_at) 
+        values ($1, $2, $3, $4, $5, $6) returning id, username, password, email, refresh_token, role, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -23,7 +23,6 @@ type CreateUserParams struct {
 	Username  string
 	Email     string
 	Password  string
-	Role      NullUserRole
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -34,7 +33,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Email,
 		arg.Password,
-		arg.Role,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -49,5 +47,27 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
+	return i, err
+}
+
+const findUsernameOrEmail = `-- name: FindUsernameOrEmail :one
+select username, email from users
+    where username=$1 or email=$2 limit 1
+`
+
+type FindUsernameOrEmailParams struct {
+	Username string
+	Email    string
+}
+
+type FindUsernameOrEmailRow struct {
+	Username string
+	Email    string
+}
+
+func (q *Queries) FindUsernameOrEmail(ctx context.Context, arg FindUsernameOrEmailParams) (FindUsernameOrEmailRow, error) {
+	row := q.db.QueryRowContext(ctx, findUsernameOrEmail, arg.Username, arg.Email)
+	var i FindUsernameOrEmailRow
+	err := row.Scan(&i.Username, &i.Email)
 	return i, err
 }
