@@ -55,6 +55,17 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 	return string(ns.UserRole), nil
 }
 
+type Room struct {
+	ID       uuid.UUID
+	RoomName string
+	AdminID  uuid.NullUUID
+}
+
+type RoomMember struct {
+	RoomID uuid.UUID
+	UserID uuid.UUID
+}
+
 type User struct {
 	ID           uuid.UUID
 	Username     string

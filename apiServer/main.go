@@ -41,7 +41,7 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Mount("/api/v1/user", router.UserRouter(&apiCfg))
-
+	r.Mount("/api/v1/room", router.RoomRouter(&apiCfg))
 	log.Println("Starting the server at port", envVariables.Port)
 	err = http.ListenAndServe(fmt.Sprintf(":%v", envVariables.Port), r)
 	if err != nil {
