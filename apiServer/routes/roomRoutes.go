@@ -10,5 +10,6 @@ import (
 func RoomRouter(apiCfg *controllers.ApiConf) *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/create-room", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.CreateRoom)).ServeHTTP)
+	r.Post("/add-member", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.AddMembersToRoom)).ServeHTTP)
 	return r
 }

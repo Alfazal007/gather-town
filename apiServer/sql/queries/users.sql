@@ -17,3 +17,6 @@ update users set refresh_token=$1 where username=$2 returning *;
 
 -- name: GetUserByName :one
 select * from users where username=$1;
+
+-- name: GetUseFromId :one
+select * from users where id=$1 limit 1;

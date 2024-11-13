@@ -51,3 +51,14 @@ func (q *Queries) FindExistingRoom(ctx context.Context, arg FindExistingRoomPara
 	err := row.Scan(&i.RoomName, &i.ID)
 	return i, err
 }
+
+const getRoomFromId = `-- name: GetRoomFromId :one
+select id, room_name, admin_id from rooms where id=$1 limit 1
+`
+
+func (q *Queries) GetRoomFromId(ctx context.Context, id uuid.UUID) (Room, error) {
+	row := q.db.QueryRowContext(ctx, getRoomFromId, id)
+	var i Room
+	err := row.Scan(&i.ID, &i.RoomName, &i.AdminID)
+	return i, err
+}

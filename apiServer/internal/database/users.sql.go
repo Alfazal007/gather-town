@@ -94,6 +94,26 @@ func (q *Queries) FindUsernameOrEmailForLogin(ctx context.Context, username stri
 	return i, err
 }
 
+const getUseFromId = `-- name: GetUseFromId :one
+select id, username, password, email, refresh_token, role, created_at, updated_at from users where id=$1 limit 1
+`
+
+func (q *Queries) GetUseFromId(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUseFromId, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.RefreshToken,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByName = `-- name: GetUserByName :one
 select id, username, password, email, refresh_token, role, created_at, updated_at from users where username=$1
 `

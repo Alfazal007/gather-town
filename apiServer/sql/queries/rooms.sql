@@ -7,3 +7,6 @@ insert into rooms
     (id, room_name, admin_id)
         values ($1, $2, $3) returning *;
 
+-- name: GetRoomFromId :one
+select * from rooms where id=$1 limit 1;
+
