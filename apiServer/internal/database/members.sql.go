@@ -44,3 +44,19 @@ func (q *Queries) GetExistingPerson(ctx context.Context, arg GetExistingPersonPa
 	err := row.Scan(&i.RoomID, &i.UserID)
 	return i, err
 }
+
+const removeExistingPersonFromRoom = `-- name: RemoveExistingPersonFromRoom :one
+delete from room_members where room_id=$1 and user_id=$2 returning room_id, user_id
+`
+
+type RemoveExistingPersonFromRoomParams struct {
+	RoomID uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) RemoveExistingPersonFromRoom(ctx context.Context, arg RemoveExistingPersonFromRoomParams) (RoomMember, error) {
+	row := q.db.QueryRowContext(ctx, removeExistingPersonFromRoom, arg.RoomID, arg.UserID)
+	var i RoomMember
+	err := row.Scan(&i.RoomID, &i.UserID)
+	return i, err
+}

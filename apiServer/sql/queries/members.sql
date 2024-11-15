@@ -5,3 +5,7 @@ insert into room_members
 
 -- name: GetExistingPerson :one
 select * from room_members where room_id=$1 and user_id=$2 limit 1;
+
+-- name: RemoveExistingPersonFromRoom :one
+delete from room_members where room_id=$1 and user_id=$2 returning *;
+
