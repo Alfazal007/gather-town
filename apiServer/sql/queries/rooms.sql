@@ -10,3 +10,6 @@ insert into rooms
 -- name: GetRoomFromId :one
 select * from rooms where id=$1 limit 1;
 
+-- name: DeleteRoomFromId :one
+delete from rooms where id=$1 returning *;
+

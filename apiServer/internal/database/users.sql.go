@@ -51,6 +51,26 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteUserViaId = `-- name: DeleteUserViaId :one
+delete from users where id=$1 returning id, username, password, email, refresh_token, role, created_at, updated_at
+`
+
+func (q *Queries) DeleteUserViaId(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, deleteUserViaId, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.RefreshToken,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const findUsernameOrEmail = `-- name: FindUsernameOrEmail :one
 select username, email from users
     where username=$1 or email=$2 limit 1

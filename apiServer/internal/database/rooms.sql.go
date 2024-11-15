@@ -30,6 +30,17 @@ func (q *Queries) AddNewRoom(ctx context.Context, arg AddNewRoomParams) (Room, e
 	return i, err
 }
 
+const deleteRoomFromId = `-- name: DeleteRoomFromId :one
+delete from rooms where id=$1 returning id, room_name, admin_id
+`
+
+func (q *Queries) DeleteRoomFromId(ctx context.Context, id uuid.UUID) (Room, error) {
+	row := q.db.QueryRowContext(ctx, deleteRoomFromId, id)
+	var i Room
+	err := row.Scan(&i.ID, &i.RoomName, &i.AdminID)
+	return i, err
+}
+
 const findExistingRoom = `-- name: FindExistingRoom :one
 select room_name, id from rooms
     where room_name=$1 and admin_id=$2 limit 1

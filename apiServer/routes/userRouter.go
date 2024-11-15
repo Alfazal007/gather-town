@@ -12,6 +12,7 @@ func UserRouter(apiCfg *controllers.ApiConf) *chi.Mux {
 	r.Post("/sign-up", apiCfg.Signup)
 	r.Post("/sign-in", apiCfg.SignIn)
 	r.Get("/current-user", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.GetCurrentUser)).ServeHTTP)
+	r.Delete("/delete-user", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.DeleteUser)).ServeHTTP)
 
 	return r
 }

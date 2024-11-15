@@ -20,3 +20,7 @@ select * from users where username=$1;
 
 -- name: GetUseFromId :one
 select * from users where id=$1 limit 1;
+
+-- name: DeleteUserViaId :one
+delete from users where id=$1 returning *;
+
