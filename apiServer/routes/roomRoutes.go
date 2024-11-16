@@ -14,5 +14,6 @@ func RoomRouter(apiCfg *controllers.ApiConf) *chi.Mux {
 	r.Post("/add-member", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.AddMembersToRoom)).ServeHTTP)
 	r.Put("/remove-member", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.RemoveMemberFromTheRoomByAdmin)).ServeHTTP)
 	r.Put("/leave-member", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.LeaveTheRoom)).ServeHTTP)
+	r.Get("/roomId/{roomId}", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.GetRoomInfo)).ServeHTTP)
 	return r
 }

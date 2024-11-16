@@ -29,6 +29,33 @@ func (q *Queries) AddNewRoomMember(ctx context.Context, arg AddNewRoomMemberPara
 	return i, err
 }
 
+const getAllMembersOfRoom = `-- name: GetAllMembersOfRoom :many
+select user_id from room_members where room_id=$1
+`
+
+func (q *Queries) GetAllMembersOfRoom(ctx context.Context, roomID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getAllMembersOfRoom, roomID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getExistingPerson = `-- name: GetExistingPerson :one
 select room_id, user_id from room_members where room_id=$1 and user_id=$2 limit 1
 `
