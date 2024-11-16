@@ -6,10 +6,10 @@ import (
 )
 
 type CustomRoomData struct {
-	RoomID      string
-	RoomName    string
-	AdminID     string
-	RoomMembers []uuid.UUID
+	RoomID      string      `json:"roomId"`
+	RoomName    string      `json:"roomName"`
+	AdminID     string      `json:"adminId"`
+	RoomMembers []uuid.UUID `json:"roomMembers"`
 }
 
 func ReturnRoomInformationData(roomFromDatabase database.Room, roomMembers []uuid.UUID) CustomRoomData {

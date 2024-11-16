@@ -12,3 +12,6 @@ delete from room_members where room_id=$1 and user_id=$2 returning *;
 -- name: GetAllMembersOfRoom :many
 select user_id from room_members where room_id=$1;
 
+-- name: UserInRoom :one
+select * from room_members where room_id=$1 and user_id=$2;
+
