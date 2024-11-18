@@ -16,20 +16,24 @@ type WebSocketManager struct {
 }
 
 func (wsManager *WebSocketManager) RegisterUser(message types.ConectMessageSent, username string, roomToJoin string) bool {
+	fmt.Println("Register")
 	tokenExtracted := message.Token
 	if len(tokenExtracted) < 5 || len(roomToJoin) < 4 {
 		return false
 	}
-	url := fmt.Sprintf("/%v/%v/token/%v/username/%v", types.BackendUrl, roomToJoin, tokenExtracted, username)
+	url := fmt.Sprintf("%v/%v/token/%v/username/%v", types.BackendUrl, roomToJoin, tokenExtracted, username)
 	resp, err := http.Get(url)
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 	defer resp.Body.Close()
+	fmt.Println(resp.StatusCode)
 	return resp.StatusCode == http.StatusOK
 }
 
 func (wsManager *WebSocketManager) ConnectMessageHandler(messageSent types.Message, connection *websocket.Conn) {
+	fmt.Println("coonnnect sender")
 	wsManager.Mutex.Lock()
 	_, roomExists := wsManager.RoomWithPeople[messageSent.Room]
 	if roomExists {
@@ -43,6 +47,8 @@ func (wsManager *WebSocketManager) ConnectMessageHandler(messageSent types.Messa
 }
 
 func (wsManager *WebSocketManager) DisconnectMessageHandler(messageSent types.Message, connection *websocket.Conn) {
+	fmt.Println("Discoonnnect sender")
+
 	wsManager.Mutex.Lock()
 	_, roomExists := wsManager.RoomWithPeople[messageSent.Room]
 	if roomExists {
@@ -64,11 +70,18 @@ func (wsManager *WebSocketManager) DisconnectMessageHandler(messageSent types.Me
 }
 
 func (wsManager *WebSocketManager) SendTextMessage(messageSent types.Message, connection *websocket.Conn, messageType int) {
+	fmt.Println("Text sender")
 	wsManager.Mutex.RLock()
 	defer wsManager.Mutex.RUnlock()
 	roomToBroadCastIn, roomExists := wsManager.RoomWithPeople[messageSent.Room]
 	if roomExists {
-		sentMessage := messageSent.Message.(types.TextMessageSent)
+		var sentMessage types.TextMessageSent
+		err := json.Unmarshal(messageSent.Message, &sentMessage)
+		if err != nil {
+			// TODO:: checl type sduid
+			fmt.Println("Check types error")
+			return
+		}
 		// check if the user if part of the room
 		_, userExists := roomToBroadCastIn[messageSent.Username]
 		if userExists {
@@ -82,8 +95,16 @@ func (wsManager *WebSocketManager) SendTextMessage(messageSent types.Message, co
 }
 
 func (wsManager *WebSocketManager) SendPositionMessage(messageSent types.Message, connection *websocket.Conn, messageType int) {
+	fmt.Println("Position sender")
+
 	// TODO:: Here, a check should be applied if the positions provided is correct or not, i.e., accessible or not if not early return
-	positionsToBeBroadcasted := messageSent.Message.(types.PositionMessageSent)
+	var positionsToBeBroadcasted types.PositionMessageSent
+	err := json.Unmarshal(messageSent.Message, &positionsToBeBroadcasted)
+	if err != nil {
+		// TODO:: checl type sduid
+		fmt.Println("Check types error")
+		return
+	}
 	positionsToBeBroadcastedString, err := json.Marshal(positionsToBeBroadcasted)
 	if err != nil {
 		return
@@ -104,6 +125,7 @@ func (wsManager *WebSocketManager) SendPositionMessage(messageSent types.Message
 }
 
 func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool, string) {
+	fmt.Println("Checking types")
 	var messageSent types.Message
 	err := json.Unmarshal(messageSentInBytes, &messageSent)
 	if err != nil || messageSent.TypeOfMessage == "" || messageSent.Room == "" || messageSent.Username == "" {
@@ -111,8 +133,10 @@ func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool,
 	}
 	switch messageSent.TypeOfMessage {
 	case types.Conect:
-		connectMessage, ok := messageSent.Message.(types.ConectMessageSent)
-		if !ok {
+		var connectMessage types.ConectMessageSent
+		err := json.Unmarshal(messageSent.Message, &connectMessage)
+		if err != nil {
+			fmt.Println(err)
 			return false, ""
 		}
 		if connectMessage.Token == "" {
@@ -122,8 +146,9 @@ func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool,
 	case types.Disconnect:
 		return true, string(types.Disconnect)
 	case types.TextMessage:
-		textMessage, ok := messageSent.Message.(types.TextMessageSent)
-		if !ok {
+		var textMessage types.TextMessageSent
+		err := json.Unmarshal(messageSent.Message, &textMessage)
+		if err != nil {
 			return false, ""
 		}
 		if textMessage.Message == "" {
@@ -131,8 +156,9 @@ func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool,
 		}
 		return true, string(types.TextMessage)
 	case types.PositionMessage:
-		positionMessage, ok := messageSent.Message.(types.PositionMessageSent)
-		if !ok {
+		var positionMessage types.PositionMessageSent
+		err := json.Unmarshal(messageSent.Message, &positionMessage)
+		if err != nil {
 			return false, ""
 		}
 		if positionMessage.X == "" || positionMessage.Y == "" {

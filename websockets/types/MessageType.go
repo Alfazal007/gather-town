@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 type MessageType string
 
 const (
@@ -13,7 +15,7 @@ type Message struct {
 	Username      string
 	Room          string
 	TypeOfMessage MessageType
-	Message       interface{}
+	Message       json.RawMessage
 }
 
 type TextMessageSent struct {

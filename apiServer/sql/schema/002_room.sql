@@ -1,7 +1,7 @@
 -- +goose Up
 create table rooms (
     id uuid primary key,
-    room_name text not null,
+    room_name text unique not null,
     admin_id uuid REFERENCES users(id) ON DELETE CASCADE
 );
 

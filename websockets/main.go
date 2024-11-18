@@ -43,7 +43,10 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 			continue
 		}
 		if typeOfMessage == string(types.Conect) {
-			canBeConnected := wsManager.RegisterUser(messageInJsonFormat.Message.(types.ConectMessageSent), messageInJsonFormat.Username, messageInJsonFormat.Room)
+			var connectMessage types.ConectMessageSent
+			_ = json.Unmarshal(messageInJsonFormat.Message, &connectMessage)
+			fmt.Println("Request being sent to can be connected")
+			canBeConnected := wsManager.RegisterUser(connectMessage, messageInJsonFormat.Username, messageInJsonFormat.Room)
 			if canBeConnected {
 				wsManager.ConnectMessageHandler(messageInJsonFormat, conn)
 			}

@@ -16,7 +16,6 @@ func (apiCfg *ApiConf) UserCanJoinRoomApiCall(w http.ResponseWriter, r *http.Req
 	usernameRequested := chi.URLParam(r, "username")
 	roomIdString := chi.URLParam(r, "roomId")
 	roomId, err := uuid.Parse(roomIdString)
-	fmt.Println(roomId)
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Invalid roomid", []string{})
 		return
