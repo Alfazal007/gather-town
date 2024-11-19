@@ -25,9 +25,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		fmt.Println("Failed to upgrade the websocket connection")
 		return
 	}
-	fmt.Println("Client connected successfully")
 	defer func() {
-		fmt.Println("Call cleranup")
 		wsManager.CleanUp(conn)
 		conn.Close()
 	}()
@@ -37,7 +35,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		wsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println("Error in the message", err)
 			break
 		}
 		messageIsOfCorrectType, typeOfMessage := wsManager.TypeChecker(message)
@@ -52,7 +49,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		if typeOfMessage == string(types.Conect) {
 			var connectMessage types.ConectMessageSent
 			_ = json.Unmarshal(messageInJsonFormat.Message, &connectMessage)
-			fmt.Println("Request being sent to can be connected")
 			canBeConnected := wsManager.RegisterUser(connectMessage, messageInJsonFormat.Username, messageInJsonFormat.Room)
 			if canBeConnected {
 				wsManager.ConnectMessageHandler(messageInJsonFormat, conn)

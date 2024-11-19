@@ -67,7 +67,7 @@ func (apiCfg *ApiConf) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	// add refresh token to the database
 	cookie1 := http.Cookie{
-		Name:     "access-token",
+		Name:     "accessToken",
 		Value:    accessToken,
 		Path:     "/",
 		Secure:   true,
@@ -76,7 +76,7 @@ func (apiCfg *ApiConf) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie1)
 	cookie2 := http.Cookie{
-		Name:     "refresh-token",
+		Name:     "refreshToken",
 		Value:    refreshToken,
 		HttpOnly: true,
 		Path:     "/",
@@ -85,11 +85,13 @@ func (apiCfg *ApiConf) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie2)
 	type Tokens struct {
-		AccessToken  string `json:"access-token"`
-		RefreshToken string `json:"refresh-token"`
+		AccessToken  string `json:"accessToken"`
+		RefreshToken string `json:"refreshToken"`
+		Username     string `json:"username"`
 	}
 	helpers.RespondWithJSON(w, 200, Tokens{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		Username:     existingUser.Username,
 	})
 }

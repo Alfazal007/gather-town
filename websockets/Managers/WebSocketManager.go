@@ -111,7 +111,7 @@ func (wsManager *WebSocketManager) SendPositionMessage(messageSent types.Message
 func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool, string) {
 	var messageSent types.Message
 	err := json.Unmarshal(messageSentInBytes, &messageSent)
-	if err != nil || messageSent.TypeOfMessage == "" || messageSent.Room == "" || messageSent.Username == "" {
+	if err != nil || messageSent.TypeOfMessage == "" || messageSent.Room == "" || messageSent.Username == "" || messageSent.Color == "" {
 		return false, ""
 	}
 	switch messageSent.TypeOfMessage {

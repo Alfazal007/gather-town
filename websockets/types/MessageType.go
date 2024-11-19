@@ -16,6 +16,7 @@ type Message struct {
 	Room          string
 	TypeOfMessage MessageType
 	Message       json.RawMessage
+	Color         string
 }
 
 type TextMessageSent struct {
