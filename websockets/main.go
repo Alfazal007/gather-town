@@ -26,8 +26,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		return
 	}
 	fmt.Println("Client connected successfully")
-	defer conn.Close()
+	defer func() {
+		fmt.Println("Call cleranup")
+		wsManager.CleanUp(conn)
+		conn.Close()
+	}()
 	for {
+		wsManager.Mutex.RLock()
+		fmt.Println(wsManager.RoomWithPeople)
+		wsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
 			fmt.Println("Error in the message", err)

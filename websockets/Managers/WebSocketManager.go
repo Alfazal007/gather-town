@@ -16,7 +16,6 @@ type WebSocketManager struct {
 }
 
 func (wsManager *WebSocketManager) RegisterUser(message types.ConectMessageSent, username string, roomToJoin string) bool {
-	fmt.Println("Register")
 	tokenExtracted := message.Token
 	if len(tokenExtracted) < 5 || len(roomToJoin) < 4 {
 		return false
@@ -24,16 +23,13 @@ func (wsManager *WebSocketManager) RegisterUser(message types.ConectMessageSent,
 	url := fmt.Sprintf("%v/%v/token/%v/username/%v", types.BackendUrl, roomToJoin, tokenExtracted, username)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	defer resp.Body.Close()
-	fmt.Println(resp.StatusCode)
 	return resp.StatusCode == http.StatusOK
 }
 
 func (wsManager *WebSocketManager) ConnectMessageHandler(messageSent types.Message, connection *websocket.Conn) {
-	fmt.Println("coonnnect sender")
 	wsManager.Mutex.Lock()
 	_, roomExists := wsManager.RoomWithPeople[messageSent.Room]
 	if roomExists {
@@ -47,8 +43,6 @@ func (wsManager *WebSocketManager) ConnectMessageHandler(messageSent types.Messa
 }
 
 func (wsManager *WebSocketManager) DisconnectMessageHandler(messageSent types.Message, connection *websocket.Conn) {
-	fmt.Println("Discoonnnect sender")
-
 	wsManager.Mutex.Lock()
 	_, roomExists := wsManager.RoomWithPeople[messageSent.Room]
 	if roomExists {
@@ -61,16 +55,12 @@ func (wsManager *WebSocketManager) DisconnectMessageHandler(messageSent types.Me
 			}
 		}
 	} else {
-		err := connection.Close()
-		if err != nil {
-			fmt.Println("Issue closing a connection", err.Error())
-		}
+		_ = connection.Close()
 	}
 	wsManager.Mutex.Unlock()
 }
 
 func (wsManager *WebSocketManager) SendTextMessage(messageSent types.Message, connection *websocket.Conn, messageType int) {
-	fmt.Println("Text sender")
 	wsManager.Mutex.RLock()
 	defer wsManager.Mutex.RUnlock()
 	roomToBroadCastIn, roomExists := wsManager.RoomWithPeople[messageSent.Room]
@@ -78,8 +68,6 @@ func (wsManager *WebSocketManager) SendTextMessage(messageSent types.Message, co
 		var sentMessage types.TextMessageSent
 		err := json.Unmarshal(messageSent.Message, &sentMessage)
 		if err != nil {
-			// TODO:: checl type sduid
-			fmt.Println("Check types error")
 			return
 		}
 		// check if the user if part of the room
@@ -95,20 +83,16 @@ func (wsManager *WebSocketManager) SendTextMessage(messageSent types.Message, co
 }
 
 func (wsManager *WebSocketManager) SendPositionMessage(messageSent types.Message, connection *websocket.Conn, messageType int) {
-	fmt.Println("Position sender")
-
-	// TODO:: Here, a check should be applied if the positions provided is correct or not, i.e., accessible or not if not early return
 	var positionsToBeBroadcasted types.PositionMessageSent
 	err := json.Unmarshal(messageSent.Message, &positionsToBeBroadcasted)
 	if err != nil {
-		// TODO:: checl type sduid
-		fmt.Println("Check types error")
 		return
 	}
 	positionsToBeBroadcastedString, err := json.Marshal(positionsToBeBroadcasted)
 	if err != nil {
 		return
 	}
+	// TODO:: Here, a check should be applied if the positions provided is correct or not, i.e., accessible or not if not early return
 	wsManager.Mutex.RLock()
 	defer wsManager.Mutex.RUnlock()
 	roomToBroadCastIn, roomExists := wsManager.RoomWithPeople[messageSent.Room]
@@ -125,7 +109,6 @@ func (wsManager *WebSocketManager) SendPositionMessage(messageSent types.Message
 }
 
 func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool, string) {
-	fmt.Println("Checking types")
 	var messageSent types.Message
 	err := json.Unmarshal(messageSentInBytes, &messageSent)
 	if err != nil || messageSent.TypeOfMessage == "" || messageSent.Room == "" || messageSent.Username == "" {
@@ -136,7 +119,6 @@ func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool,
 		var connectMessage types.ConectMessageSent
 		err := json.Unmarshal(messageSent.Message, &connectMessage)
 		if err != nil {
-			fmt.Println(err)
 			return false, ""
 		}
 		if connectMessage.Token == "" {
@@ -167,5 +149,22 @@ func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool,
 		return true, string(types.PositionMessage)
 	default:
 		return false, ""
+	}
+}
+
+func (wsManager *WebSocketManager) CleanUp(conn *websocket.Conn) {
+	wsManager.Mutex.Lock()
+	defer wsManager.Mutex.Unlock()
+	for roomId, roomsMaps := range wsManager.RoomWithPeople {
+		for username, websocketConn := range roomsMaps {
+			if websocketConn == conn {
+				delete(wsManager.RoomWithPeople[roomId], username)
+				conn.Close()
+				if len(wsManager.RoomWithPeople[roomId]) == 0 {
+					delete(wsManager.RoomWithPeople, roomId)
+				}
+				return
+			}
+		}
 	}
 }
