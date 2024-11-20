@@ -48,7 +48,6 @@ export const Createroom = () => {
             if (res.status != 201) {
                 toast({
                     title: "Issue creating the room",
-                    description: `${res.data.message}`,
                     variant: "destructive"
                 });
                 return;

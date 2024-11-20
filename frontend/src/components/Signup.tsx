@@ -14,12 +14,20 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { registerUserType } from "@/zodTypes/registerUserType";
+import { UserContext } from "@/context/UserContext";
 
 export const SignUp = () => {
     const navigate = useNavigate();
     const [isSending, setIsSending] = useState<boolean>(false);
+    const { user } = useContext(UserContext)
+
+    useEffect(() => {
+        if (user) {
+            navigate("/")
+        }
+    }, [])
 
     const form = useForm<z.infer<typeof registerUserType>>({
         resolver: zodResolver(registerUserType),

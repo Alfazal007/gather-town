@@ -72,7 +72,7 @@ func (q *Queries) DeleteUserViaId(ctx context.Context, id uuid.UUID) (User, erro
 }
 
 const findUsernameOrEmail = `-- name: FindUsernameOrEmail :one
-select username, email from users
+select username, email, id from users
     where username=$1 or email=$2 limit 1
 `
 
@@ -84,12 +84,13 @@ type FindUsernameOrEmailParams struct {
 type FindUsernameOrEmailRow struct {
 	Username string
 	Email    string
+	ID       uuid.UUID
 }
 
 func (q *Queries) FindUsernameOrEmail(ctx context.Context, arg FindUsernameOrEmailParams) (FindUsernameOrEmailRow, error) {
 	row := q.db.QueryRowContext(ctx, findUsernameOrEmail, arg.Username, arg.Email)
 	var i FindUsernameOrEmailRow
-	err := row.Scan(&i.Username, &i.Email)
+	err := row.Scan(&i.Username, &i.Email, &i.ID)
 	return i, err
 }
 

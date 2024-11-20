@@ -16,17 +16,20 @@ func (apiCfg *ApiConf) GetRoomInfo(w http.ResponseWriter, r *http.Request) {
 		helpers.RespondWithError(w, 400, "Issue with finding the user from the database", []string{})
 		return
 	}
+
 	roomIdString := chi.URLParam(r, "roomId")
 	roomId, err := uuid.Parse(roomIdString)
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Invalid roomid", []string{})
 		return
 	}
+
 	roomData, err := apiCfg.DB.GetRoomFromId(r.Context(), roomId)
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Issue finding the room", []string{})
 		return
 	}
+
 	if roomData.AdminID.Valid && roomData.AdminID.UUID != user.ID {
 		_, err = apiCfg.DB.GetExistingPerson(r.Context(), database.GetExistingPersonParams{
 			RoomID: roomId,

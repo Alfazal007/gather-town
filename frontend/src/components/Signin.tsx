@@ -14,13 +14,19 @@ import {
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/context/UserContext";
 
 export const SignIn = () => {
     const navigate = useNavigate();
     const [isSending, setIsSending] = useState<boolean>(false);
+    const { user } = useContext(UserContext)
+    useEffect(() => {
+        if (user) {
+            navigate("/")
+        }
+    }, [])
 
     const form = useForm<z.infer<typeof loginUserType>>({
         resolver: zodResolver(loginUserType),
@@ -54,6 +60,7 @@ export const SignIn = () => {
                 accessToken: res.data.accessToken as string,
                 refreshToken: res.data.refreshToken as string,
                 username: res.data.username as string,
+                id: res.data.userid as string
             });
             navigate("/");
         } catch (err: any) {

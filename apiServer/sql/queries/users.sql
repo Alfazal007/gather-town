@@ -4,7 +4,7 @@ insert into users
         values ($1, $2, $3, $4, $5, $6) returning *;
 
 -- name: FindUsernameOrEmail :one
-select username, email from users
+select username, email, id from users
     where username=$1 or email=$2 limit 1;
 
 

@@ -84,14 +84,34 @@ func (apiCfg *ApiConf) SignIn(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Hour * 240),
 	}
 	http.SetCookie(w, &cookie2)
+	cookie3 := http.Cookie{
+		Name:     "username",
+		Value:    existingUser.Username,
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+		Expires:  time.Now().Add(time.Hour * 240),
+	}
+	http.SetCookie(w, &cookie3)
+	cookie4 := http.Cookie{
+		Name:     "id",
+		Value:    existingUser.ID.String(),
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+		Expires:  time.Now().Add(time.Hour * 240),
+	}
+	http.SetCookie(w, &cookie4)
 	type Tokens struct {
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`
 		Username     string `json:"username"`
+		Id           string `json:"userid"`
 	}
 	helpers.RespondWithJSON(w, 200, Tokens{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		Username:     existingUser.Username,
+		Id:           existingUser.ID.String(),
 	})
 }

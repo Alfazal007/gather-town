@@ -5,12 +5,13 @@ import Landing from "./components/Landing";
 import { Createroom } from "./components/CreateRoom";
 import UserProvider from "./context/UserContext";
 import { ThemeProvider } from "./components/theme-provider";
-import Navbar from "./components/Navbar";
+import RoomOuter from "./components/RoomOuter";
 
 export interface User {
     accessToken: string;
     refreshToken: string;
     username: string;
+    id: string;
 }
 
 function App() {
@@ -31,7 +32,12 @@ function App() {
         {
             path: "/create-room",
             element: <Createroom />
+        },
+        {
+            path: "/room/:roomId",
+            element: <RoomOuter />,
         }
+
     ]);
 
     return (

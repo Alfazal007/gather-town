@@ -30,22 +30,27 @@ func (q *Queries) AddNewRoomMember(ctx context.Context, arg AddNewRoomMemberPara
 }
 
 const getAllMembersOfRoom = `-- name: GetAllMembersOfRoom :many
-select user_id from room_members where room_id=$1
+select rm.user_id, u.username from room_members rm join users u on rm.user_id = u.id where room_id=$1
 `
 
-func (q *Queries) GetAllMembersOfRoom(ctx context.Context, roomID uuid.UUID) ([]uuid.UUID, error) {
+type GetAllMembersOfRoomRow struct {
+	UserID   uuid.UUID
+	Username string
+}
+
+func (q *Queries) GetAllMembersOfRoom(ctx context.Context, roomID uuid.UUID) ([]GetAllMembersOfRoomRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAllMembersOfRoom, roomID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []uuid.UUID
+	var items []GetAllMembersOfRoomRow
 	for rows.Next() {
-		var user_id uuid.UUID
-		if err := rows.Scan(&user_id); err != nil {
+		var i GetAllMembersOfRoomRow
+		if err := rows.Scan(&i.UserID, &i.Username); err != nil {
 			return nil, err
 		}
-		items = append(items, user_id)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
