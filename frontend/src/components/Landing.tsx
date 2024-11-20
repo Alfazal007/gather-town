@@ -1,19 +1,70 @@
 import { UserContext } from '@/context/UserContext'
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Navbar from './Navbar'
+import axios from 'axios'
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
+
+type RoomType = {
+    id: string,
+    roomName: string,
+    adminId: string
+}
 
 const Landing = () => {
     const navigate = useNavigate()
-    const { user } = useContext(UserContext)
+    const { user, setUser } = useContext(UserContext)
+    const [rooms, setRooms] = useState<RoomType[]>([])
     useEffect(() => {
         if (!user) {
             navigate("/signin")
             return
         }
+        fetchRoomDetails()
     }, [user])
+    const fetchRoomDetails = async () => {
+        const url = "http://localhost:8000/api/v1/user/get-rooms"
+        const res = await axios.get(
+            url,
+            {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`
+                }
+            }
+        );
+        console.log(res.data)
+        if (res.status == 200) {
+            setRooms(res.data)
+        }
+    }
     return (
         <>
-            <div>Landing {JSON.stringify(user)}</div>
+            <Navbar setUser={setUser} />
+            <Card className="w-full max-w-md mx-auto">
+                <CardHeader>
+                    {rooms.length > 0 && <CardTitle>Your rooms</CardTitle>}
+                </CardHeader>
+                <CardContent>
+                    <ul className="space-y-2">
+                        {rooms.map((room, index) => (
+                            <li
+                                key={index}
+                                className="bg-secondary text-secondary-foreground rounded-lg p-3 transition-colors hover:bg-secondary/80"
+                            >
+                                {room.roomName}
+                            </li>
+                        ))}
+                        {
+                            rooms.length == 0 && <CardTitle>It looks like you are not part of any room, try creating one</CardTitle>
+                        }
+                    </ul>
+                </CardContent>
+            </Card>
         </>)
 }
 

@@ -73,3 +73,33 @@ func (q *Queries) GetRoomFromId(ctx context.Context, id uuid.UUID) (Room, error)
 	err := row.Scan(&i.ID, &i.RoomName, &i.AdminID)
 	return i, err
 }
+
+const getRoomsOfUser = `-- name: GetRoomsOfUser :many
+select distinct r.id, r.room_name, r.admin_id
+from rooms r
+left join room_members rm ON r.id = rm.room_id
+where r.admin_id=$1 OR rm.user_id=$1
+`
+
+func (q *Queries) GetRoomsOfUser(ctx context.Context, adminID uuid.NullUUID) ([]Room, error) {
+	rows, err := q.db.QueryContext(ctx, getRoomsOfUser, adminID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Room
+	for rows.Next() {
+		var i Room
+		if err := rows.Scan(&i.ID, &i.RoomName, &i.AdminID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

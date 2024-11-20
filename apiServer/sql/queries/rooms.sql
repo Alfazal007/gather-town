@@ -13,3 +13,8 @@ select * from rooms where id=$1 limit 1;
 -- name: DeleteRoomFromId :one
 delete from rooms where id=$1 returning *;
 
+-- name: GetRoomsOfUser :many
+select distinct r.*
+from rooms r
+left join room_members rm ON r.id = rm.room_id
+where r.admin_id=$1 OR rm.user_id=$1;

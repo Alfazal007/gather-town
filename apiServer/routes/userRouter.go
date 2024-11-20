@@ -14,5 +14,6 @@ func UserRouter(apiCfg *controllers.ApiConf) *chi.Mux {
 	r.Get("/current-user", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.GetCurrentUser)).ServeHTTP)
 	r.Delete("/delete-user", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.DeleteUser)).ServeHTTP)
 	r.Get("/username/{username}", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.FindCurrentUser)).ServeHTTP)
+	r.Get("/get-rooms", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.GetRoomsUserIsPartOf)).ServeHTTP)
 	return r
 }

@@ -16,11 +16,12 @@ import { useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { createRoomUserType } from "@/zodTypes/createRoomType";
 import { UserContext } from "@/context/UserContext";
+import Navbar from "./Navbar";
 
 export const Createroom = () => {
     const navigate = useNavigate();
     const [isSending, setIsSending] = useState<boolean>(false);
-    const { user } = useContext(UserContext)
+    const { user, setUser } = useContext(UserContext)
 
     const form = useForm<z.infer<typeof createRoomUserType>>({
         resolver: zodResolver(createRoomUserType),
@@ -76,36 +77,39 @@ export const Createroom = () => {
     }, [user])
 
     return (
-        < div className="flex items-center justify-center h-screen" >
-            <div className="md:border-2 p-4">
-                <h1 className="font-bold text-2xl pb-4 text-center">Give a name to this room</h1>
-                <Form {...form}>
-                    <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-8"
-                    >
-                        <div className="w-60 md:w-96">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input
-                                                className="h-12 md:text-xl"
-                                                placeholder="room name"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        {!isSending && <Button type="submit">Create</Button>}
-                    </form>
-                </Form>
-            </div>
-        </div >
+        <>
+            <Navbar setUser={setUser} />
+            < div className="flex items-center justify-center h-screen" >
+                <div className="md:border-2 p-4">
+                    <h1 className="font-bold text-2xl pb-4 text-center">Give a name to this room</h1>
+                    <Form {...form}>
+                        <form
+                            onSubmit={form.handleSubmit(onSubmit)}
+                            className="space-y-8"
+                        >
+                            <div className="w-60 md:w-96">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input
+                                                    className="h-12 md:text-xl"
+                                                    placeholder="room name"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            {!isSending && <Button type="submit">Create</Button>}
+                        </form>
+                    </Form>
+                </div>
+            </div >
+        </>
     );
 };

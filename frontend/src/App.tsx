@@ -4,6 +4,8 @@ import { SignIn } from "./components/Signin";
 import Landing from "./components/Landing";
 import { Createroom } from "./components/CreateRoom";
 import UserProvider from "./context/UserContext";
+import { ThemeProvider } from "./components/theme-provider";
+import Navbar from "./components/Navbar";
 
 export interface User {
     accessToken: string;
@@ -34,9 +36,11 @@ function App() {
 
     return (
         <>
-            <UserProvider>
-                <RouterProvider router={router} />
-            </UserProvider>
+            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+                <UserProvider>
+                    <RouterProvider router={router} />
+                </UserProvider>
+            </ThemeProvider>
         </>
     );
 }
