@@ -43,9 +43,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		if err != nil {
 			continue
 		}
-		wsManager.Mutex.RLock()
-		fmt.Println(wsManager.RoomWithPeople)
-		wsManager.Mutex.RUnlock()
 		if typeOfMessage == string(types.Conect) {
 			var connectMessage types.ConectMessageSent
 			_ = json.Unmarshal(messageInJsonFormat.Message, &connectMessage)
