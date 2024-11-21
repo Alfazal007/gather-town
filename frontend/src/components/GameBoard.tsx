@@ -4,6 +4,7 @@ import { UserContext } from "@/context/UserContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { BroadCast, Message, MessageType, PositionMessageSent } from "@/types/MessageTypes";
 import { Button } from "./ui/button";
+import ChatDisplay from "./ChatDisplay";
 
 type OtherPlayersType = {
     [key: string]: {
@@ -166,6 +167,26 @@ const GameBoard = () => {
         socket.send(JSON.stringify(positionData))
     }, [position])
 
+    function sendTextMessage(message: string) {
+        if (!socket || !roomId || !user) {
+            return
+        }
+
+        let messageData: Message = {
+            Color: color,
+            TypeOfMessage: MessageType.TextMessage,
+            Room: roomId,
+            Username: user?.username,
+            Message: {
+                Message: message
+            }
+        }
+        socket.send(JSON.stringify(messageData))
+        setMessages((prev) => {
+            return [...prev, { sender: user.username, message: message }]
+        })
+    }
+
     useEffect(() => {
         if (!user) {
             socket?.send(JSON.stringify(disconnectMessage))
@@ -195,14 +216,6 @@ const GameBoard = () => {
         }
     }, [socket])
 
-    function handleLeaveRoom() {
-        if (socket) {
-            socket.send(JSON.stringify(disconnectMessage))
-            socket.close()
-        }
-        navigate("/")
-    }
-
     return (
         <div className="flex mt-2">
             <div
@@ -221,17 +234,20 @@ const GameBoard = () => {
                 }
 
             </div>
+            {
+                moveStarted && <div><ChatDisplay messages={messages} onLeaveRoom={() => { socket?.send(JSON.stringify(disconnectMessage)); socket?.close(); setSocket(null); navigate("/") }} onSendMessage={(message: string) => { sendTextMessage(message) }} /></div>
+            }
             <div className="flex items-center">
-                {
-                    moveStarted ?
-                        <Button onClick={handleLeaveRoom} className="ml-4 cursor-pointer">Leave Room</Button>
-                        :
+                <div>
+                    {
+                        !moveStarted &&
                         <Button onClick={initialize} className="ml-4 cursor-pointer">Join Room</Button>
-                }
-                {
-                    !moveStarted &&
-                    <Button onClick={() => { socket?.close(); setSocket(null); navigate("/") }} className="ml-4 cursor-pointer">Go back</Button>
-                }
+                    }
+                    {
+                        !moveStarted &&
+                        <Button onClick={() => { socket?.close(); setSocket(null); navigate("/") }} className="ml-4 cursor-pointer">Go back</Button>
+                    }
+                </div>
             </div>
         </div>
     );

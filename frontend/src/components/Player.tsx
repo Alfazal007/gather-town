@@ -10,7 +10,7 @@ export const Player = ({ x, y, color, username }: { x: number, y: number, color:
             paddingLeft: "4px",
             paddingTop: "3px"
         }}>
-        {username.substring(0, Math.min(username.length, 10))}
+        {username?.substring(0, Math.min(username.length, 10))}
     </div>
 );
 
