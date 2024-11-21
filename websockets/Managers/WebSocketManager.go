@@ -42,16 +42,27 @@ func (wsManager *WebSocketManager) ConnectMessageHandler(messageSent types.Messa
 	wsManager.Mutex.Unlock()
 }
 
-func (wsManager *WebSocketManager) DisconnectMessageHandler(messageSent types.Message, connection *websocket.Conn) {
+func (wsManager *WebSocketManager) DisconnectMessageHandler(messageSent types.Message, connection *websocket.Conn, messageType int) {
 	wsManager.Mutex.Lock()
-	_, roomExists := wsManager.RoomWithPeople[messageSent.Room]
+	roomToBeBroadcastedIn, roomExists := wsManager.RoomWithPeople[messageSent.Room]
 	if roomExists {
 		connectionToBeClosed := wsManager.RoomWithPeople[messageSent.Room][messageSent.Username]
+		messageToBeSent := types.BroadCast{
+			TypeOfMessage: types.Disconnect,
+			Message:       messageSent.Username,
+			Sender:        messageSent.Username,
+			Color:         messageSent.Color,
+		}
+		bytesSendingMessage, _ := json.Marshal(messageToBeSent)
 		if connectionToBeClosed == connection {
 			delete(wsManager.RoomWithPeople[messageSent.Room], messageSent.Username)
 			connection.Close()
 			if len(wsManager.RoomWithPeople[messageSent.Room]) == 0 {
 				delete(wsManager.RoomWithPeople, messageSent.Room)
+			} else {
+				for _, connection := range roomToBeBroadcastedIn {
+					connection.WriteMessage(messageType, bytesSendingMessage)
+				}
 			}
 		}
 	} else {
@@ -72,10 +83,17 @@ func (wsManager *WebSocketManager) SendTextMessage(messageSent types.Message, co
 		}
 		// check if the user if part of the room
 		_, userExists := roomToBroadCastIn[messageSent.Username]
+		textMessageSending := types.BroadCast{
+			TypeOfMessage: types.TextMessage,
+			Message:       sentMessage.Message,
+			Sender:        messageSent.Username,
+			Color:         messageSent.Color,
+		}
+		bytesSendingMessage, _ := json.Marshal(textMessageSending)
 		if userExists {
 			for username, connection := range roomToBroadCastIn {
 				if username != messageSent.Username {
-					connection.WriteMessage(messageType, []byte(sentMessage.Message))
+					connection.WriteMessage(messageType, bytesSendingMessage)
 				}
 			}
 		}
@@ -99,9 +117,16 @@ func (wsManager *WebSocketManager) SendPositionMessage(messageSent types.Message
 	if roomExists {
 		_, userExists := roomToBroadCastIn[messageSent.Username]
 		if userExists {
+			positionsMessageSending := types.BroadCast{
+				TypeOfMessage: types.PositionMessage,
+				Message:       string(positionsToBeBroadcastedString),
+				Sender:        messageSent.Username,
+				Color:         messageSent.Color,
+			}
+			bytesSendingMessage, _ := json.Marshal(positionsMessageSending)
 			for username, connection := range roomToBroadCastIn {
 				if username != messageSent.Username {
-					connection.WriteMessage(messageType, positionsToBeBroadcastedString)
+					connection.WriteMessage(messageType, bytesSendingMessage)
 				}
 			}
 		}

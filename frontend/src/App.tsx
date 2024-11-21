@@ -6,6 +6,7 @@ import { Createroom } from "./components/CreateRoom";
 import UserProvider from "./context/UserContext";
 import { ThemeProvider } from "./components/theme-provider";
 import RoomOuter from "./components/RoomOuter";
+import GameBoard from "./components/GameBoard";
 
 export interface User {
     accessToken: string;
@@ -36,6 +37,10 @@ function App() {
         {
             path: "/room/:roomId",
             element: <RoomOuter />,
+        },
+        {
+            path: "/room/play/:roomId",
+            element: <GameBoard />
         }
 
     ]);

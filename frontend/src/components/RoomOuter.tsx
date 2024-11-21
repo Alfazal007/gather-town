@@ -160,6 +160,7 @@ const RoomOuter = () => {
             setFoundUserData(null)
         }
     }
+
     return (
         <>
             <Navbar setUser={setUser} />
@@ -197,12 +198,12 @@ const RoomOuter = () => {
                     )
                 }
                 <div className="m-2 p-2">
-                    <Button className="w-full text-md" disabled={!roomId}>
+                    <Button className="w-full text-md" onClick={() => navigate(`/room/play/${roomId}`)} disabled={!roomId}>
                         Join Room
                     </Button>
                 </div>
 
-            </div>
+            </div >
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">Users in this Room</CardTitle>

@@ -31,3 +31,10 @@ type PositionMessageSent struct {
 type ConectMessageSent struct {
 	Token string
 }
+
+type BroadCast struct {
+	TypeOfMessage MessageType
+	Message       string
+	Sender        string
+	Color         string
+}

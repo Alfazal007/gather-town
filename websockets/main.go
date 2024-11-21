@@ -30,9 +30,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		conn.Close()
 	}()
 	for {
-		wsManager.Mutex.RLock()
-		fmt.Println(wsManager.RoomWithPeople)
-		wsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -46,6 +43,9 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		if err != nil {
 			continue
 		}
+		wsManager.Mutex.RLock()
+		fmt.Println(wsManager.RoomWithPeople)
+		wsManager.Mutex.RUnlock()
 		if typeOfMessage == string(types.Conect) {
 			var connectMessage types.ConectMessageSent
 			_ = json.Unmarshal(messageInJsonFormat.Message, &connectMessage)
@@ -54,7 +54,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 				wsManager.ConnectMessageHandler(messageInJsonFormat, conn)
 			}
 		} else if typeOfMessage == string(types.Disconnect) {
-			wsManager.DisconnectMessageHandler(messageInJsonFormat, conn)
+			wsManager.DisconnectMessageHandler(messageInJsonFormat, conn, t)
 		} else if typeOfMessage == string(types.TextMessage) {
 			wsManager.SendTextMessage(messageInJsonFormat, conn, t)
 		} else if typeOfMessage == string(types.PositionMessage) {
