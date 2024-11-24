@@ -6,7 +6,7 @@ import { BroadCast, Message, MessageType, PositionMessageSent } from "@/types/Me
 import { Button } from "./ui/button";
 import ChatDisplay from "./ChatDisplay";
 
-type OtherPlayersType = {
+export type OtherPlayersType = {
     [key: string]: {
         username: string,
         color: string,
@@ -235,7 +235,7 @@ const GameBoard = () => {
 
             </div>
             {
-                moveStarted && <div><ChatDisplay messages={messages} onLeaveRoom={() => { socket?.send(JSON.stringify(disconnectMessage)); socket?.close(); setSocket(null); navigate("/") }} onSendMessage={(message: string) => { sendTextMessage(message) }} /></div>
+                moveStarted && <div><ChatDisplay otherPeople={otherPlayers} messages={messages} onLeaveRoom={() => { socket?.send(JSON.stringify(disconnectMessage)); socket?.close(); setSocket(null); navigate("/") }} onSendMessage={(message: string) => { sendTextMessage(message) }} /></div>
             }
             <div className="flex items-center">
                 <div>
