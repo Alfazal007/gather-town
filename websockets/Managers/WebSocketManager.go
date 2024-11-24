@@ -182,6 +182,16 @@ func (wsManager *WebSocketManager) TypeChecker(messageSentInBytes []byte) (bool,
 			return false, ""
 		}
 		return true, string(types.InitiateCallRequest)
+	case types.AcceptCallResponse:
+		var acceptCallResponseMessage types.AcceptCallFromReceiver
+		err := json.Unmarshal(messageSent.Message, &acceptCallResponseMessage)
+		if err != nil {
+			return false, ""
+		}
+		if acceptCallResponseMessage.Initiator == "" {
+			return false, ""
+		}
+		return true, string(types.AcceptCallResponse)
 	default:
 		return false, ""
 	}
@@ -224,6 +234,30 @@ func (wsManager *WebSocketManager) HandleInitiateCallMessage(messageSent types.M
 			messageInBytes, err := json.Marshal(messageToBeSent)
 			if err == nil {
 				receiver.WriteMessage(messageType, messageInBytes)
+			}
+		}
+	}
+}
+
+func (wsManager *WebSocketManager) HandleAcceptCallMessage(messageSent types.Message, connection *websocket.Conn, messageType int) {
+	var acceptCallMessage types.AcceptCallFromReceiver
+	err := json.Unmarshal(messageSent.Message, &acceptCallMessage)
+	if err != nil {
+		return
+	}
+	wsManager.Mutex.RLock()
+	defer wsManager.Mutex.RUnlock()
+	roomBeingUsed, roomExists := wsManager.RoomWithPeople[messageSent.Room]
+	if roomExists {
+		initiator, initiatorExists := roomBeingUsed[acceptCallMessage.Initiator]
+		_, acceptorExists := roomBeingUsed[messageSent.Username]
+		if initiatorExists && acceptorExists {
+			messageToBeSent := types.AcceptCallFromReceiver{
+				Initiator: acceptCallMessage.Initiator,
+			}
+			messageInBytes, err := json.Marshal(messageToBeSent)
+			if err == nil {
+				initiator.WriteMessage(messageType, messageInBytes)
 			}
 		}
 	}

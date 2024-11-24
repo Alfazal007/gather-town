@@ -10,6 +10,7 @@ const (
 	Disconnect          MessageType = "Disconnect"
 	Conect              MessageType = "Connect"
 	InitiateCallRequest MessageType = "IntiateCallRequest"
+	AcceptCallResponse  MessageType = "AcceptCallResponse"
 )
 
 type Message struct {
@@ -47,4 +48,8 @@ type BroadCast struct {
 type InitiateCallToReceiverFromServer struct {
 	Sender   string
 	Receiver string
+}
+
+type AcceptCallFromReceiver struct {
+	Initiator string
 }
