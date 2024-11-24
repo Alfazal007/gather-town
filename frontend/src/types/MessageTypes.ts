@@ -2,14 +2,16 @@ export enum MessageType {
     PositionMessage = "Position",
     TextMessage = "Text",
     Disconnect = "Disconnect",
-    Connect = "Connect"
+    Connect = "Connect",
+    InitiateCallRequest = "IntiateCallRequest",
+    AcceptCallResponse = "AcceptCallResponse"
 }
 
 export type Message = {
     Username: string
     Room: string
     TypeOfMessage: MessageType
-    Message: TextMessageSent | PositionMessageSent | ConectMessageSent
+    Message: TextMessageSent | PositionMessageSent | ConectMessageSent | InitiateCallToReceiverFromServer | AcceptCallFromReceiver
     Color: string
 }
 
@@ -32,3 +34,13 @@ export type BroadCast = {
     Sender: string,
     Color: string
 }
+
+export type InitiateCallToReceiverFromServer = {
+    Sender: string
+    Receiver: string
+}
+
+export type AcceptCallFromReceiver = {
+    Initiator: string
+}
+

@@ -3,7 +3,6 @@ import { Button } from "./ui/button"
 import { Send, X } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { Input } from "./ui/input"
-import VideoCall from "./VideoCallButtons"
 import { nanoid } from "nanoid"
 import { OtherPlayersType } from "./GameBoard"
 
@@ -19,7 +18,7 @@ interface ChatDisplayProps {
     otherPeople: OtherPlayersType
 }
 
-export default function ChatDisplay({ messages, onLeaveRoom, onSendMessage, otherPeople }: ChatDisplayProps) {
+export default function ChatDisplay({ messages, onLeaveRoom, onSendMessage }: ChatDisplayProps) {
     const [newMessage, setNewMessage] = useState("")
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -34,7 +33,6 @@ export default function ChatDisplay({ messages, onLeaveRoom, onSendMessage, othe
             setNewMessage('')
         }
     }
-
     useEffect(() => {
         scrollToBottom()
     }, [messages])
@@ -84,7 +82,6 @@ export default function ChatDisplay({ messages, onLeaveRoom, onSendMessage, othe
                     </div>
                 </form>
             </div>
-            <VideoCall otherPeople={otherPeople} />
         </>
     )
 }

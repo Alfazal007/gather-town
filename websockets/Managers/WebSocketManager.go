@@ -227,9 +227,11 @@ func (wsManager *WebSocketManager) HandleInitiateCallMessage(messageSent types.M
 		_, senderExists := roomBeingUsed[messageSent.Username]
 		receiver, receiverExists := roomBeingUsed[initiateCallMessage.Receiver]
 		if senderExists && receiverExists {
-			messageToBeSent := types.InitiateCallToReceiverFromServer{
-				Sender:   messageSent.Username,
-				Receiver: initiateCallMessage.Receiver,
+			messageToBeSent := types.BroadCast{
+				TypeOfMessage: types.InitiateCallRequest,
+				Sender:        messageSent.Username,
+				Color:         messageSent.Color,
+				Message:       "",
 			}
 			messageInBytes, err := json.Marshal(messageToBeSent)
 			if err == nil {
@@ -252,8 +254,11 @@ func (wsManager *WebSocketManager) HandleAcceptCallMessage(messageSent types.Mes
 		initiator, initiatorExists := roomBeingUsed[acceptCallMessage.Initiator]
 		_, acceptorExists := roomBeingUsed[messageSent.Username]
 		if initiatorExists && acceptorExists {
-			messageToBeSent := types.AcceptCallFromReceiver{
-				Initiator: acceptCallMessage.Initiator,
+			messageToBeSent := types.BroadCast{
+				TypeOfMessage: types.AcceptCallResponse,
+				Sender:        messageSent.Username,
+				Color:         messageSent.Color,
+				Message:       "",
 			}
 			messageInBytes, err := json.Marshal(messageToBeSent)
 			if err == nil {

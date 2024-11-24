@@ -5,6 +5,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { BroadCast, Message, MessageType, PositionMessageSent } from "@/types/MessageTypes";
 import { Button } from "./ui/button";
 import ChatDisplay from "./ChatDisplay";
+import VideoCall from "./VideoCallButtons";
+import { CustomModal } from "./CustomModal";
 
 export type OtherPlayersType = {
     [key: string]: {
@@ -36,6 +38,8 @@ const colors = [
 const GameBoard = () => {
     const [otherPlayers, setOtherPlayers] = useState<OtherPlayersType>({});
     const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [_, setCallIncoming] = useState(false);
+    const [callComingFrom, setCallComingFrom] = useState("")
     const boardWidth = 1400;
     const boardHeight = 900;
     const characterSize = 40;
@@ -56,6 +60,12 @@ const GameBoard = () => {
             Message: "Disconnect"
         }
     }
+    const [acceptor, setAcceptor] = useState<string>("")
+
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const handleOpenModal = () => setIsModalOpen(true)
+    const handleCloseModal = () => setIsModalOpen(false)
+
 
     function generateRandomColor() {
         const index = Math.floor(Math.random() * (colors.length));
@@ -76,6 +86,10 @@ const GameBoard = () => {
         return () => {
         };
     }, []);
+
+    const handleAccept = () => {
+        acceptCall()
+    }
 
 
     const updatePositionOfOtherPlayer = (x: string, y: string, username: string, color: string) => {
@@ -187,6 +201,66 @@ const GameBoard = () => {
         })
     }
 
+    function acceptCall() {
+        handleCloseModal()
+        if (!socket || !roomId || !user) {
+            return
+        }
+
+        let messageData: Message = {
+            Color: color,
+            TypeOfMessage: MessageType.AcceptCallResponse,
+            Room: roomId,
+            Username: user?.username,
+            Message: {
+                Initiator: callComingFrom
+            }
+        }
+        socket.send(JSON.stringify(messageData))
+
+        socket.send(JSON.stringify(disconnectMessage));
+        socket.close();
+        setSocket(null);
+        navigate(`/video/${callComingFrom}`)
+    }
+
+    function disconnectAndMoveToCallAttendScreen(username: string) {
+        if (!socket || !roomId || !user) {
+            return
+        }
+        socket.send(JSON.stringify(disconnectMessage));
+        socket.close();
+        setSocket(null);
+        navigate(`/video/${username}`)
+    }
+
+    function someOneRequestedACallHandler(requestor: string) {
+        setCallComingFrom(requestor);
+        setCallIncoming(true);
+        handleOpenModal()
+    }
+
+    function makeCall(receiver: string) {
+        if (!user || !roomId || !socket) {
+            return
+        }
+        let messageToBeSent: Message = {
+            Room: roomId,
+            Username: user.username,
+            Color: color,
+            TypeOfMessage: MessageType.InitiateCallRequest,
+            Message: {
+                Sender: user.username,
+                Receiver: receiver
+            }
+        }
+        socket.send(JSON.stringify(messageToBeSent))
+    }
+
+    function someoneAcceptedACallHandler(acceptor: string) {
+        setAcceptor(acceptor)
+    }
+
     useEffect(() => {
         if (!user) {
             socket?.send(JSON.stringify(disconnectMessage))
@@ -212,44 +286,65 @@ const GameBoard = () => {
                 case MessageType.Disconnect:
                     removeOtherPlayer(message.Sender)
                     break
+                case MessageType.InitiateCallRequest:
+                    console.log(message)
+                    someOneRequestedACallHandler(message.Sender)
+                    break
+                case MessageType.AcceptCallResponse:
+                    someoneAcceptedACallHandler(message.Sender)
+                    break
             }
         }
     }, [socket])
 
     return (
-        <div className="flex mt-2">
-            <div
-                className="relative bg-customBackgroundGame ml-3"
-                style={{
-                    width: `${boardWidth}px`,
-                    height: `${boardHeight}px`
-                }}
-            >
+        <>
+            <div className="flex mt-2">
+                <div
+                    className="relative bg-customBackgroundGame ml-3"
+                    style={{
+                        width: `${boardWidth}px`,
+                        height: `${boardHeight}px`
+                    }}
+                >
+                    <CustomModal
+                        isOpen={isModalOpen}
+                        onClose={handleCloseModal}
+                        onAccept={handleAccept}
+                        caller={callComingFrom}
+                    />
+                    <Player x={position.x} y={position.y} color={color} username={user?.username as string} />
+                    {
+                        Object.entries(otherPlayers).map(([id, player]) => (
+                            <Player key={id} y={player.y} x={player.x} color={player.color} username={player.username} />
+                        ))
+                    }
 
-                <Player x={position.x} y={position.y} color={color} username={user?.username as string} />
+                </div>
                 {
-                    Object.entries(otherPlayers).map(([id, player]) => (
-                        <Player key={id} y={player.y} x={player.x} color={player.color} username={player.username} />
-                    ))
+                    moveStarted &&
+                    <div>
+                        <ChatDisplay otherPeople={otherPlayers} messages={messages}
+                            onLeaveRoom={() => { socket?.send(JSON.stringify(disconnectMessage)); socket?.close(); setSocket(null); navigate("/") }} onSendMessage={(message: string) => { sendTextMessage(message) }}
+                        />
+                        <VideoCall otherPeople={otherPlayers} makeACall={makeCall} acceptor={acceptor} disconnectAndMoveToCallAttendScreen={disconnectAndMoveToCallAttendScreen} />
+                    </div>
                 }
+                <div className="flex items-center">
+                    <div>
+                        {
+                            !moveStarted &&
+                            <Button onClick={initialize} className="ml-4 cursor-pointer">Join Room</Button>
+                        }
 
-            </div>
-            {
-                moveStarted && <div><ChatDisplay otherPeople={otherPlayers} messages={messages} onLeaveRoom={() => { socket?.send(JSON.stringify(disconnectMessage)); socket?.close(); setSocket(null); navigate("/") }} onSendMessage={(message: string) => { sendTextMessage(message) }} /></div>
-            }
-            <div className="flex items-center">
-                <div>
-                    {
-                        !moveStarted &&
-                        <Button onClick={initialize} className="ml-4 cursor-pointer">Join Room</Button>
-                    }
-                    {
-                        !moveStarted &&
-                        <Button onClick={() => { socket?.close(); setSocket(null); navigate("/") }} className="ml-4 cursor-pointer">Go back</Button>
-                    }
+                        {
+                            !moveStarted &&
+                            <Button onClick={() => { socket?.close(); setSocket(null); navigate("/") }} className="ml-4 cursor-pointer">Go back</Button>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
