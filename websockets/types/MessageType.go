@@ -5,10 +5,11 @@ import "encoding/json"
 type MessageType string
 
 const (
-	PositionMessage MessageType = "Position"
-	TextMessage     MessageType = "Text"
-	Disconnect      MessageType = "Disconnect"
-	Conect          MessageType = "Connect"
+	PositionMessage     MessageType = "Position"
+	TextMessage         MessageType = "Text"
+	Disconnect          MessageType = "Disconnect"
+	Conect              MessageType = "Connect"
+	InitiateCallRequest MessageType = "IntiateCallRequest"
 )
 
 type Message struct {
@@ -17,6 +18,10 @@ type Message struct {
 	TypeOfMessage MessageType
 	Message       json.RawMessage
 	Color         string
+}
+
+type InitiateCallRequestMessage struct {
+	Receiver string
 }
 
 type TextMessageSent struct {
@@ -37,4 +42,9 @@ type BroadCast struct {
 	Message       string
 	Sender        string
 	Color         string
+}
+
+type InitiateCallToReceiverFromServer struct {
+	Sender   string
+	Receiver string
 }

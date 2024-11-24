@@ -56,6 +56,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 			wsManager.SendTextMessage(messageInJsonFormat, conn, t)
 		} else if typeOfMessage == string(types.PositionMessage) {
 			wsManager.SendPositionMessage(messageInJsonFormat, conn, t)
+		} else if typeOfMessage == string(types.InitiateCallRequest) {
+			wsManager.HandleInitiateCallMessage(messageInJsonFormat, conn, t)
 		}
 	}
 }
