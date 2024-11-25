@@ -128,3 +128,34 @@ func (vsManager *VideoRoomManager) CreateRoomForVideo(message types.VideoMessage
 	conn.WriteMessage(messageType, dataInBytes)
 	return true
 }
+
+func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	vsManager.Mutex.RLock()
+	defer vsManager.Mutex.RUnlock()
+	var messageOfIceCandidates types.IceCandidate
+	err := json.Unmarshal(message.Message, &messageOfIceCandidates)
+	if err != nil {
+		return
+	}
+
+	roomToBeForwardedTo, roomExists := vsManager.RoomWithTwoPeople[message.Room]
+	if roomExists {
+		if roomToBeForwardedTo.Person1.Conn == nil || roomToBeForwardedTo.Person2.Conn == nil {
+			return
+		}
+		createdMessage := types.BroadCastVideoInfo{
+			Room:     message.Room,
+			Username: message.Username,
+			Message:  message.Message,
+		}
+		messageInBytes, err := json.Marshal(createdMessage)
+		if err != nil {
+			return
+		}
+		if conn == roomToBeForwardedTo.Person1.Conn {
+			roomToBeForwardedTo.Person2.Conn.WriteMessage(messageType, messageInBytes)
+		} else {
+			roomToBeForwardedTo.Person1.Conn.WriteMessage(messageType, messageInBytes)
+		}
+	}
+}

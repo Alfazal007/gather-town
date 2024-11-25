@@ -98,6 +98,8 @@ func vsHandler(w http.ResponseWriter, r *http.Request, vsManager *managers.Video
 					return
 				}
 			}
+		} else if typeOfMessage == string(types.IceCandidateMessage) {
+			vsManager.ForwardIceCandidates(messageInJsonFormat, conn, t)
 		}
 	}
 }
