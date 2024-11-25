@@ -80,8 +80,11 @@ const GameBoard = () => {
             setSocket(ws);
         };
         ws.onclose = () => {
-            setSocket(null);
-            navigate("/")
+            setTimeout(() => {
+                setSocket(null);
+                //navigate("/")
+            }, 100);
+
         };
         return () => {
         };
@@ -219,9 +222,7 @@ const GameBoard = () => {
         socket.send(JSON.stringify(messageData))
 
         socket.send(JSON.stringify(disconnectMessage));
-        socket.close();
-        setSocket(null);
-        navigate(`/video/${callComingFrom}/${user.username}`)
+        navigate(`/video/${callComingFrom}/${user.username}/receiver`)
     }
 
     function disconnectAndMoveToCallAttendScreen(username: string) {
@@ -229,9 +230,7 @@ const GameBoard = () => {
             return
         }
         socket.send(JSON.stringify(disconnectMessage));
-        socket.close();
-        setSocket(null);
-        navigate(`/video/${user.username}/${username}`)
+        navigate(`/video/${user.username}/${username}/sender`)
     }
 
     function someOneRequestedACallHandler(requestor: string) {
@@ -265,7 +264,7 @@ const GameBoard = () => {
         if (!user) {
             socket?.send(JSON.stringify(disconnectMessage))
             socket?.close()
-            navigate("/")
+            //navigate("/")
             return
         }
         if (!socket) {

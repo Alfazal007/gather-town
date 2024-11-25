@@ -7,7 +7,9 @@ import UserProvider from "./context/UserContext";
 import { ThemeProvider } from "./components/theme-provider";
 import RoomOuter from "./components/RoomOuter";
 import GameBoard from "./components/GameBoard";
-import VideoRoom from "./components/VideoRoom";
+import VideoRoom from "./components/ReceiveVideoRoom";
+import ReceiveVideoRoom from "./components/ReceiveVideoRoom";
+import SendVideoRoom from "./components/SendVideoRoom";
 
 export interface User {
     accessToken: string;
@@ -44,8 +46,12 @@ function App() {
             element: <GameBoard />
         },
         {
-            path: "/video/:sender/:receiver",
-            element: <VideoRoom />
+            path: "/video/:sender/:receiver/receiver",
+            element: <ReceiveVideoRoom />
+        },
+        {
+            path: "/video/:sender/:receiver/sender",
+            element: <SendVideoRoom />
         }
 
     ]);
