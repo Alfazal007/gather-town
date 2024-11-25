@@ -5,11 +5,18 @@ import "encoding/json"
 type VideoType string
 
 const (
-	IceCandidateMessage    VideoType = "IceCandidates"
-	AddPersonToRoomMessage VideoType = "AddToRoom"
-	CreateRoomMessage      VideoType = "CreateRoom"
-	CreateOfferMessage     VideoType = "CreateOffer"
-	CreateAnswerMessage    VideoType = "CreateAnswer"
+	IceCandidateMessage VideoType = "IceCandidates"
+	CreateRoomMessage   VideoType = "CreateRoom"
+	SDPRoomMessage      VideoType = "SDP"
+	JoinRoomMessage     VideoType = "JoinRoom"
+	DisconnectMessage   VideoType = "Disconnect"
+)
+
+type SDPType string
+
+const (
+	CreateOffer  SDPType = "CreateOffer"
+	CreateAnswer SDPType = "CreateAnswer"
 )
 
 type VideoMessage struct {
@@ -20,7 +27,7 @@ type VideoMessage struct {
 }
 
 type IceCandidate struct {
-	IceCandidate string
+	IceCandidate json.RawMessage
 }
 
 type CreateRoom struct {
@@ -37,4 +44,15 @@ type BroadCastVideoInfo struct {
 
 type RoomCreationState struct {
 	CreatedRoom bool
+}
+
+type Sdp struct {
+	Message SDPType
+	Data    json.RawMessage
+}
+
+type JoinRoom struct {
+	Sender string
+	Room   string
+	Token  string
 }

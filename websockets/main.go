@@ -27,9 +27,12 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 	}
 	defer func() {
 		wsManager.CleanUp(conn)
-		conn.Close()
+		_ = conn.Close()
 	}()
 	for {
+		wsManager.Mutex.RLock()
+		fmt.Println(wsManager.RoomWithPeople)
+		wsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -72,9 +75,12 @@ func vsHandler(w http.ResponseWriter, r *http.Request, vsManager *managers.Video
 	}
 	defer func() {
 		vsManager.CleanUp(conn)
-		conn.Close()
+		_ = conn.Close()
 	}()
 	for {
+		vsManager.Mutex.RLock()
+		fmt.Println(vsManager.RoomWithTwoPeople)
+		vsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -91,7 +97,7 @@ func vsHandler(w http.ResponseWriter, r *http.Request, vsManager *managers.Video
 		if typeOfMessage == string(types.CreateRoomMessage) {
 			var createRoomMessage types.CreateRoom
 			_ = json.Unmarshal(messageInJsonFormat.Message, &createRoomMessage)
-			canBeConnected := vsManager.RegisterUserForVideo(createRoomMessage, messageInJsonFormat.Username)
+			canBeConnected := vsManager.RegisterUserForVideo(createRoomMessage.Token, messageInJsonFormat.Username)
 			if canBeConnected {
 				success := vsManager.CreateRoomForVideo(messageInJsonFormat, conn, t)
 				if !success {
@@ -100,6 +106,17 @@ func vsHandler(w http.ResponseWriter, r *http.Request, vsManager *managers.Video
 			}
 		} else if typeOfMessage == string(types.IceCandidateMessage) {
 			vsManager.ForwardIceCandidates(messageInJsonFormat, conn, t)
+		} else if typeOfMessage == string(types.SDPRoomMessage) {
+			vsManager.ForwardSDPData(messageInJsonFormat, conn, t)
+		} else if typeOfMessage == string(types.JoinRoomMessage) {
+			var connectMessage types.JoinRoom
+			_ = json.Unmarshal(messageInJsonFormat.Message, &connectMessage)
+			canBeConnected := vsManager.RegisterUserForVideo(connectMessage.Token, messageInJsonFormat.Username)
+			if canBeConnected {
+				vsManager.JoinRoomBySecondPerson(messageInJsonFormat, conn, t)
+			}
+		} else if typeOfMessage == string(types.DisconnectMessage) {
+			vsManager.DisconnectVideoCall(messageInJsonFormat, conn, t)
 		}
 	}
 }

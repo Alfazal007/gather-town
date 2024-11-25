@@ -1,0 +1,38 @@
+{
+	"Username":      "someone1",
+	"Room":          "joining",
+	"TypeOfMessage": "CreateRoom",
+	"Message":       {"Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE3MzI2NDIwNzMsInVzZXJfaWQiOiIwYjE0NDQ4Mi0wZGNiLTQyYTktOTIxNy0yNDdkMjEzMzI3NGYiLCJ1c2VybmFtZSI6InNvbWVvbmUxIn0.KyJbWTOJRaC1QZH3RStoSa17-pgjK4mDHccDPa-nEDk", "Sender": "someone1", "Receiver": "someone2"}
+}
+
+
+
+{
+	"Username":      "someone2",
+	"Room":          "someone1someone2",
+	"TypeOfMessage": "JoinRoom",
+	"Message":       {"Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE3MzI2NDYwNDcsInVzZXJfaWQiOiI0ZDA3ZmU1NC0zYzAwLTRiNTUtOTRjZS1iNjg1ZjUwNWFiMmQiLCJ1c2VybmFtZSI6InNvbWVvbmUyIn0.SyCTUUNlm8CFTN1bJg6z4jH-n5ox7Uwjpp3RaM6OwvE", "Sender": "someone2", "Room": "someone1someone2"}
+}
+
+
+{
+	"Username":      "someone1",
+	"Room":          "someone1someone2",
+	"TypeOfMessage": "IceCandidates",
+	"Message":       {"IceCandidate": {"sss": "dsds"}}
+}
+
+
+{
+	"Username":      "someone1",
+	"Room":          "someone1someone2",
+	"TypeOfMessage": "SDP",
+	"Message":       {"Message": "CreateOffer", "Data": {"sss": "dsds"}}
+}
+
+{
+	"Username":      "someone1",
+	"Room":          "someone1someone2",
+	"TypeOfMessage": "Disconnect",
+	"Message":       {}
+}

@@ -31,11 +31,15 @@ func (vsManager *VideoRoomManager) CleanUp(conn *websocket.Conn) {
 	for roomId, roomsMaps := range vsManager.RoomWithTwoPeople {
 		if roomsMaps.Person1.Conn == conn || roomsMaps.Person2.Conn == conn {
 			if conn == roomsMaps.Person1.Conn {
-				roomsMaps.Person2.Conn.Close()
+				if roomsMaps.Person2.Conn != nil {
+					_ = roomsMaps.Person2.Conn.Close()
+				}
 			} else {
-				roomsMaps.Person1.Conn.Close()
+				if roomsMaps.Person1.Conn != nil {
+					_ = roomsMaps.Person1.Conn.Close()
+				}
 			}
-			conn.Close()
+			_ = conn.Close()
 			delete(vsManager.RoomWithTwoPeople, roomId)
 			return
 		}
@@ -65,22 +69,39 @@ func (vsManager *VideoRoomManager) TypeChecker(messageSentInBytes []byte) (bool,
 		if err != nil {
 			return false, ""
 		}
-		if iceCandidateMessage.IceCandidate == "" {
+		return true, string(types.IceCandidateMessage)
+	case types.SDPRoomMessage:
+		var sdpTypeMessage types.Sdp
+		err := json.Unmarshal(videoMessageSent.Message, &sdpTypeMessage)
+		if err != nil {
 			return false, ""
 		}
-		return true, string(types.IceCandidateMessage)
-
+		if sdpTypeMessage.Message != types.CreateAnswer && sdpTypeMessage.Message != types.CreateOffer {
+			return false, ""
+		}
+		return true, string(types.SDPRoomMessage)
+	case types.JoinRoomMessage:
+		var joinRoomType types.JoinRoom
+		err := json.Unmarshal(videoMessageSent.Message, &joinRoomType)
+		if err != nil {
+			return false, ""
+		}
+		if joinRoomType.Room == "" || joinRoomType.Token == "" || joinRoomType.Sender == "" {
+			return false, ""
+		}
+		return true, string(types.JoinRoomMessage)
+	case types.DisconnectMessage:
+		return true, string(types.Disconnect)
 	default:
 		return false, ""
 	}
 }
 
-func (vsManager *VideoRoomManager) RegisterUserForVideo(message types.CreateRoom, username string) bool {
-	tokenExtracted := message.Token
-	if len(tokenExtracted) < 5 {
+func (vsManager *VideoRoomManager) RegisterUserForVideo(token string, username string) bool {
+	if len(token) < 5 {
 		return false
 	}
-	url := fmt.Sprintf("%v/%v/username/%v", types.UrlToVideo, tokenExtracted, username)
+	url := fmt.Sprintf("%v/%v/username/%v", types.UrlToVideo, token, username)
 	resp, err := http.Get(url)
 	if err != nil {
 		return false
@@ -154,8 +175,79 @@ func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessa
 		}
 		if conn == roomToBeForwardedTo.Person1.Conn {
 			roomToBeForwardedTo.Person2.Conn.WriteMessage(messageType, messageInBytes)
+		}
+		if conn == roomToBeForwardedTo.Person2.Conn {
+			roomToBeForwardedTo.Person1.Conn.WriteMessage(messageType, messageInBytes)
+		}
+	}
+}
+
+func (vsManager *VideoRoomManager) ForwardSDPData(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	vsManager.Mutex.RLock()
+	defer vsManager.Mutex.RUnlock()
+	var messageOfIceCandidates types.Sdp
+	err := json.Unmarshal(message.Message, &messageOfIceCandidates)
+	if err != nil {
+		return
+	}
+
+	roomToBeForwardedTo, roomExists := vsManager.RoomWithTwoPeople[message.Room]
+	if roomExists {
+		if roomToBeForwardedTo.Person1.Conn == nil || roomToBeForwardedTo.Person2.Conn == nil {
+			return
+		}
+		createdMessage := types.BroadCastVideoInfo{
+			Room:     message.Room,
+			Username: message.Username,
+			Message:  message.Message,
+		}
+		messageInBytes, err := json.Marshal(createdMessage)
+		if err != nil {
+			return
+		}
+		if conn == roomToBeForwardedTo.Person1.Conn {
+			roomToBeForwardedTo.Person2.Conn.WriteMessage(messageType, messageInBytes)
 		} else {
 			roomToBeForwardedTo.Person1.Conn.WriteMessage(messageType, messageInBytes)
+		}
+	}
+}
+
+func (vsManager *VideoRoomManager) JoinRoomBySecondPerson(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	vsManager.Mutex.Lock()
+	defer vsManager.Mutex.Unlock()
+	room, roomExists := vsManager.RoomWithTwoPeople[message.Room]
+	if roomExists && room.Person2.Conn == nil && room.Person2.Username == message.Username {
+		person1 := room.Person1
+		vsManager.RoomWithTwoPeople[message.Room] = TwoPeople{
+			Person1: person1,
+			Person2: Person{Username: message.Username, Conn: conn},
+		}
+		createdMessage := types.BroadCastVideoInfo{
+			Room:     message.Room,
+			Username: message.Username,
+			Message:  message.Message,
+		}
+		messageInBytes, err := json.Marshal(createdMessage)
+		if err != nil {
+			return
+		}
+		person1.Conn.WriteMessage(messageType, messageInBytes)
+		conn.WriteMessage(messageType, messageInBytes)
+	}
+}
+
+func (vsManager *VideoRoomManager) DisconnectVideoCall(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	vsManager.Mutex.Lock()
+	defer vsManager.Mutex.Unlock()
+	room, roomExists := vsManager.RoomWithTwoPeople[message.Room]
+	if roomExists {
+		if room.Person1.Username == message.Username || room.Person2.Username == message.Username {
+			if conn == room.Person1.Conn || conn == room.Person2.Conn {
+				_ = room.Person1.Conn.Close()
+				_ = room.Person2.Conn.Close()
+				delete(vsManager.RoomWithTwoPeople, message.Room)
+			}
 		}
 	}
 }
