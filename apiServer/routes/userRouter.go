@@ -16,5 +16,6 @@ func UserRouter(apiCfg *controllers.ApiConf) *chi.Mux {
 	r.Get("/username/{username}", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.FindCurrentUser)).ServeHTTP)
 	r.Get("/get-rooms", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.GetRoomsUserIsPartOf)).ServeHTTP)
 	r.Get("/get-admin/roomId/{roomId}", controllers.VerifyJWT(apiCfg, http.HandlerFunc(apiCfg.GetAdminInformation)).ServeHTTP)
+	r.Get("/token/{token}/username/{username}", apiCfg.IsValidUser)
 	return r
 }

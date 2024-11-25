@@ -221,7 +221,7 @@ const GameBoard = () => {
         socket.send(JSON.stringify(disconnectMessage));
         socket.close();
         setSocket(null);
-        navigate(`/video/${callComingFrom}`)
+        navigate(`/video/${callComingFrom}/${user.username}`)
     }
 
     function disconnectAndMoveToCallAttendScreen(username: string) {
@@ -231,7 +231,7 @@ const GameBoard = () => {
         socket.send(JSON.stringify(disconnectMessage));
         socket.close();
         setSocket(null);
-        navigate(`/video/${username}`)
+        navigate(`/video/${user.username}/${username}`)
     }
 
     function someOneRequestedACallHandler(requestor: string) {
@@ -287,7 +287,6 @@ const GameBoard = () => {
                     removeOtherPlayer(message.Sender)
                     break
                 case MessageType.InitiateCallRequest:
-                    console.log(message)
                     someOneRequestedACallHandler(message.Sender)
                     break
                 case MessageType.AcceptCallResponse:

@@ -64,13 +64,58 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 	}
 }
 
+func vsHandler(w http.ResponseWriter, r *http.Request, vsManager *managers.VideoRoomManager) {
+	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("Failed to upgrade the websocket connection")
+		return
+	}
+	defer func() {
+		vsManager.CleanUp(conn)
+		conn.Close()
+	}()
+	for {
+		t, message, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+		messageIsOfCorrectType, typeOfMessage := vsManager.TypeChecker(message)
+		if !messageIsOfCorrectType {
+			continue
+		}
+		var messageInJsonFormat types.VideoMessage
+		err = json.Unmarshal(message, &messageInJsonFormat)
+		if err != nil {
+			continue
+		}
+		if typeOfMessage == string(types.CreateRoomMessage) {
+			var createRoomMessage types.CreateRoom
+			_ = json.Unmarshal(messageInJsonFormat.Message, &createRoomMessage)
+			canBeConnected := vsManager.RegisterUserForVideo(createRoomMessage, messageInJsonFormat.Username)
+			if canBeConnected {
+				success := vsManager.CreateRoomForVideo(messageInJsonFormat, conn, t)
+				if !success {
+					return
+				}
+			}
+		}
+	}
+}
+
 func main() {
 	wsManager := managers.WebSocketManager{
 		Mutex:          sync.RWMutex{},
 		RoomWithPeople: make(map[string]map[string]*websocket.Conn),
 	}
+	vsManager := managers.VideoRoomManager{
+		RoomWithTwoPeople: make(map[string]managers.TwoPeople),
+		Mutex:             sync.RWMutex{},
+	}
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		wsHandler(w, r, &wsManager)
+	})
+	http.HandleFunc("/video", func(w http.ResponseWriter, r *http.Request) {
+		vsHandler(w, r, &vsManager)
 	})
 	err := http.ListenAndServe(":8001", nil)
 	fmt.Println(err)

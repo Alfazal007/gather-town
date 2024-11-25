@@ -14,7 +14,6 @@ export default function VideoCall({ otherPeople, makeACall, acceptor, disconnect
 
     useEffect(() => {
         if (acceptor == selectedUser) {
-            console.log("Call has been accepted")
             disconnectAndMoveToCallAttendScreen(selectedUser)
         }
     }, [acceptor])
