@@ -7,7 +7,6 @@ import UserProvider from "./context/UserContext";
 import { ThemeProvider } from "./components/theme-provider";
 import RoomOuter from "./components/RoomOuter";
 import GameBoard from "./components/GameBoard";
-import VideoRoom from "./components/ReceiveVideoRoom";
 import ReceiveVideoRoom from "./components/ReceiveVideoRoom";
 import SendVideoRoom from "./components/SendVideoRoom";
 

@@ -16,7 +16,7 @@ export type VideoMessage = {
     Username: string,
     Room: string,
     TypeOfMessage: VideoType,
-    Message: IceCandidate | CreateRoom | Sdp | JoinRoom,
+    Message: IceCandidate | CreateRoom | Sdp | JoinRoom | {},
 }
 
 export type IceCandidate = {

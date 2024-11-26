@@ -29,17 +29,13 @@ func (vsManager *VideoRoomManager) CleanUp(conn *websocket.Conn) {
 	vsManager.Mutex.Lock()
 	defer vsManager.Mutex.Unlock()
 	for roomId, roomsMaps := range vsManager.RoomWithTwoPeople {
-		if roomsMaps.Person1.Conn == conn || roomsMaps.Person2.Conn == conn {
-			if conn == roomsMaps.Person1.Conn {
-				if roomsMaps.Person2.Conn != nil {
-					_ = roomsMaps.Person2.Conn.Close()
-				}
-			} else {
-				if roomsMaps.Person1.Conn != nil {
-					_ = roomsMaps.Person1.Conn.Close()
-				}
+		if roomsMaps.Person1.Conn == conn || roomsMaps.Person2.Conn == conn || roomsMaps.Person1.Conn == nil || roomsMaps.Person2.Conn == nil {
+			if roomsMaps.Person2.Conn != nil {
+				_ = roomsMaps.Person2.Conn.Close()
 			}
-			_ = conn.Close()
+			if roomsMaps.Person1.Conn != nil {
+				_ = roomsMaps.Person1.Conn.Close()
+			}
 			delete(vsManager.RoomWithTwoPeople, roomId)
 			return
 		}
@@ -242,14 +238,19 @@ func (vsManager *VideoRoomManager) JoinRoomBySecondPerson(message types.VideoMes
 }
 
 func (vsManager *VideoRoomManager) DisconnectVideoCall(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	fmt.Println("called")
 	vsManager.Mutex.Lock()
 	defer vsManager.Mutex.Unlock()
 	room, roomExists := vsManager.RoomWithTwoPeople[message.Room]
 	if roomExists {
 		if room.Person1.Username == message.Username || room.Person2.Username == message.Username {
 			if conn == room.Person1.Conn || conn == room.Person2.Conn {
-				_ = room.Person1.Conn.Close()
-				_ = room.Person2.Conn.Close()
+				if room.Person1.Conn != nil {
+					_ = room.Person1.Conn.Close()
+				}
+				if room.Person2.Conn != nil {
+					_ = room.Person2.Conn.Close()
+				}
 				delete(vsManager.RoomWithTwoPeople, message.Room)
 			}
 		}
