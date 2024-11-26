@@ -19,6 +19,15 @@ const (
 	CreateAnswer SDPType = "CreateAnswer"
 )
 
+type BroadCastType string
+
+const (
+	IceCandidates      BroadCastType = "IceCandidates"
+	SDP                BroadCastType = "SDP"
+	CreateRoomResponse BroadCastType = "CreateRoomResponse"
+	JoinRoomResponse   BroadCastType = "JoinRoomResponse"
+)
+
 type VideoMessage struct {
 	Username      string
 	Room          string
@@ -37,9 +46,10 @@ type CreateRoom struct {
 }
 
 type BroadCastVideoInfo struct {
-	Room     string
-	Username string
-	Message  json.RawMessage
+	Room          string
+	Username      string
+	TypeOfMessage BroadCastType
+	Message       json.RawMessage
 }
 
 type RoomCreationState struct {

@@ -138,9 +138,10 @@ func (vsManager *VideoRoomManager) CreateRoomForVideo(message types.VideoMessage
 		},
 	}
 	createdMessage := types.BroadCastVideoInfo{
-		Room:     newKey,
-		Username: messageOfConnection.Sender,
-		Message:  nil,
+		Room:          newKey,
+		Username:      messageOfConnection.Sender,
+		Message:       nil,
+		TypeOfMessage: types.CreateRoomResponse,
 	}
 	dataInBytes, err := json.Marshal(createdMessage)
 	if err != nil {
@@ -165,9 +166,10 @@ func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessa
 			return
 		}
 		createdMessage := types.BroadCastVideoInfo{
-			Room:     message.Room,
-			Username: message.Username,
-			Message:  message.Message,
+			Room:          message.Room,
+			Username:      message.Username,
+			Message:       message.Message,
+			TypeOfMessage: types.IceCandidates,
 		}
 		messageInBytes, err := json.Marshal(createdMessage)
 		if err != nil {
@@ -197,9 +199,10 @@ func (vsManager *VideoRoomManager) ForwardSDPData(message types.VideoMessage, co
 			return
 		}
 		createdMessage := types.BroadCastVideoInfo{
-			Room:     message.Room,
-			Username: message.Username,
-			Message:  message.Message,
+			Room:          message.Room,
+			Username:      message.Username,
+			Message:       message.Message,
+			TypeOfMessage: types.SDP,
 		}
 		messageInBytes, err := json.Marshal(createdMessage)
 		if err != nil {
@@ -224,9 +227,10 @@ func (vsManager *VideoRoomManager) JoinRoomBySecondPerson(message types.VideoMes
 			Person2: Person{Username: message.Username, Conn: conn},
 		}
 		createdMessage := types.BroadCastVideoInfo{
-			Room:     message.Room,
-			Username: message.Username,
-			Message:  message.Message,
+			Room:          message.Room,
+			Username:      message.Username,
+			Message:       message.Message,
+			TypeOfMessage: types.JoinRoomResponse,
 		}
 		messageInBytes, err := json.Marshal(createdMessage)
 		if err != nil {
