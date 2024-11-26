@@ -107,6 +107,7 @@ func (vsManager *VideoRoomManager) RegisterUserForVideo(token string, username s
 }
 
 func (vsManager *VideoRoomManager) CreateRoomForVideo(message types.VideoMessage, conn *websocket.Conn, messageType int) bool {
+	vsManager.HandleSingleUserPerson(message.Username, message.Room)
 	vsManager.Mutex.Lock()
 	defer vsManager.Mutex.Unlock()
 	var messageOfConnection types.CreateRoom
@@ -148,6 +149,8 @@ func (vsManager *VideoRoomManager) CreateRoomForVideo(message types.VideoMessage
 }
 
 func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	fmt.Println("ice message in")
+
 	vsManager.Mutex.RLock()
 	defer vsManager.Mutex.RUnlock()
 	var messageOfIceCandidates types.IceCandidate
@@ -181,6 +184,7 @@ func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessa
 }
 
 func (vsManager *VideoRoomManager) ForwardSDPData(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	fmt.Println("sdp message in")
 	vsManager.Mutex.RLock()
 	defer vsManager.Mutex.RUnlock()
 	var messageOfIceCandidates types.Sdp
@@ -213,6 +217,7 @@ func (vsManager *VideoRoomManager) ForwardSDPData(message types.VideoMessage, co
 }
 
 func (vsManager *VideoRoomManager) JoinRoomBySecondPerson(message types.VideoMessage, conn *websocket.Conn, messageType int) {
+	vsManager.HandleSingleUserPerson(message.Username, message.Room)
 	vsManager.Mutex.Lock()
 	defer vsManager.Mutex.Unlock()
 	room, roomExists := vsManager.RoomWithTwoPeople[message.Room]
@@ -252,6 +257,26 @@ func (vsManager *VideoRoomManager) DisconnectVideoCall(message types.VideoMessag
 					_ = room.Person2.Conn.Close()
 				}
 				delete(vsManager.RoomWithTwoPeople, message.Room)
+			}
+		}
+	}
+}
+
+func (vsManager *VideoRoomManager) HandleSingleUserPerson(username string, notToDeleteRoom string) {
+	vsManager.Mutex.Lock()
+	defer vsManager.Mutex.Unlock()
+	for roomId, twoPeople := range vsManager.RoomWithTwoPeople {
+		if roomId != notToDeleteRoom {
+			person1 := twoPeople.Person1
+			person2 := twoPeople.Person2
+			if person1.Username == username || person2.Username == username {
+				if person1.Conn != nil {
+					_ = person1.Conn.Close()
+				}
+				if person2.Conn != nil {
+					_ = person2.Conn.Close()
+				}
+				delete(vsManager.RoomWithTwoPeople, roomId)
 			}
 		}
 	}

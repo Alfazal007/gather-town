@@ -16,11 +16,11 @@ export type VideoMessage = {
     Username: string,
     Room: string,
     TypeOfMessage: VideoType,
-    Message: IceCandidate | CreateRoom | Sdp | JoinRoom | {},
+    Message: IceCandidate | CreateRoom | Sdp | JoinRoom | RTCSessionDescriptionInit | {},
 }
 
 export type IceCandidate = {
-    IceCandidate: JSON
+    IceCandidate: RTCIceCandidate
 }
 
 export type CreateRoom = {
@@ -40,7 +40,7 @@ export enum BroadCastVideoType {
 export type BroadCastVideoInfo = {
     Room: string,
     Username: string,
-    Message: JSON,
+    Message: IceCandidate | Sdp,
     TypeOfMessage: BroadCastVideoType,
 }
 
@@ -50,7 +50,7 @@ export type RoomCreationState = {
 
 export type Sdp = {
     Message: SDPType,
-    Data: JSON
+    Data: RTCSessionDescriptionInit
 }
 
 export type JoinRoom = {
