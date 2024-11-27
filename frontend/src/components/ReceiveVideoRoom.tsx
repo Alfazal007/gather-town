@@ -23,7 +23,8 @@ const ReceiveVideoRoom = () => {
 
     useEffect(() => {
         startedCallRef.current = startedCall;
-    }, [startedCall])
+    }, [startedCall]);
+
 
     useEffect(() => {
         return () => {
@@ -83,6 +84,7 @@ const ReceiveVideoRoom = () => {
             Message: {}
         }
         return () => {
+
             clearTimeout(timeout1);
             clearTimeout(timeout2);
             ws.send(JSON.stringify(disconnectMessage))
@@ -108,10 +110,12 @@ const ReceiveVideoRoom = () => {
         if (navigator.mediaDevices) {
             navigator.mediaDevices.getUserMedia({
                 video: true,
+                //                audio: true
             }).then((stream) => {
                 if (sendVideoRef.current) {
                     sendVideoRef.current.srcObject = stream
-                    sendVideoRef.current.play()
+                    sendVideoRef.current.muted = true
+                    sendVideoRef.current.play().then(() => { }).catch((err) => { console.log("err send", err) })
                 }
                 stream.getTracks().forEach((track) => {
                     pc?.addTrack(track);
@@ -123,8 +127,9 @@ const ReceiveVideoRoom = () => {
             if (receiveVideoRef.current) {
                 const mediaStream = new MediaStream([event.track]);
                 receiveVideoRef.current.srcObject = mediaStream;
+                receiveVideoRef.current.muted = false
                 try {
-                    await receiveVideoRef.current.play();
+                    receiveVideoRef.current.play().then(() => { }).catch((err) => { console.log("err rece", err) });
                 } catch (err) { }
             }
         }

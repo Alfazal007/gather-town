@@ -6,6 +6,7 @@ import { UserContext } from "@/context/UserContext"
 import { useNavigate, useParams } from "react-router-dom"
 import { BroadCastVideoInfo, BroadCastVideoType, VideoMessage, VideoType, CreateRoom, IceCandidate, Sdp, SDPType } from "@/types/VideoTypes"
 import ConnectingToCall from "./ConnectingCall"
+import { trace } from "console"
 
 const SendVideoRoom = () => {
     const [isMuted, setIsMuted] = useState(false)
@@ -125,25 +126,27 @@ const SendVideoRoom = () => {
     const getCameraStreamAndSend = () => {
         if (navigator.mediaDevices) {
             navigator.mediaDevices.getUserMedia({
-                video: true
+                video: true,
             }).then((stream) => {
                 if (sendVideoRef.current) {
                     sendVideoRef.current.srcObject = stream
-                    sendVideoRef.current.play()
+                    sendVideoRef.current.muted = true
+                    sendVideoRef.current.play().then(() => { }).catch((err) => { console.log("err send", err) })
                 }
                 stream.getTracks().forEach((track) => {
                     pc?.addTrack(track);
                 });
             });
         }
+
         pc.ontrack = async (event) => {
             if (receiveVideoRef.current) {
                 const mediaStream = new MediaStream([event.track]);
                 receiveVideoRef.current.srcObject = mediaStream;
+                receiveVideoRef.current.muted = false
                 try {
-                    await receiveVideoRef.current.play();
-                } catch (err) {
-                }
+                    receiveVideoRef.current.play().then(() => { }).catch((err) => { console.log("err rece", err) });
+                } catch (err) { }
             }
         }
     }
