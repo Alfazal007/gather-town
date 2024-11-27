@@ -20,6 +20,7 @@ const ReceiveVideoRoom = () => {
     const receiveVideoRef = useRef<HTMLVideoElement | null>(null);
     const sendVideoRef = useRef<HTMLVideoElement | null>(null);
     const pc = new RTCPeerConnection();
+    const audioRef = useRef<HTMLAudioElement | null>(null)
 
     useEffect(() => {
         startedCallRef.current = startedCall;
@@ -92,7 +93,7 @@ const ReceiveVideoRoom = () => {
     }, [])
 
     useEffect(() => {
-        if (!socket) {
+        if (!socket || !socket.OPEN) {
             return
         }
         socket.onmessage = async (event) => {
@@ -108,31 +109,53 @@ const ReceiveVideoRoom = () => {
 
     function startReceiving(socket: WebSocket) {
         if (navigator.mediaDevices) {
+            // Request both video and audio in a single getUserMedia call
             navigator.mediaDevices.getUserMedia({
                 video: true,
-                //                audio: true
+                audio: true
             }).then((stream) => {
+                // Assign the video stream to the sendVideoRef
                 if (sendVideoRef.current) {
-                    sendVideoRef.current.srcObject = stream
-                    sendVideoRef.current.muted = true
-                    sendVideoRef.current.play().then(() => { }).catch((err) => { console.log("err send", err) })
+                    sendVideoRef.current.srcObject = stream;
+                    sendVideoRef.current.muted = true;
+                    sendVideoRef.current.play().catch((err) => { console.log("Error playing video:", err); });
                 }
+
+                // Add both video and audio tracks to the peer connection
                 stream.getTracks().forEach((track) => {
                     pc?.addTrack(track);
                 });
+            }).catch((err) => {
+                console.log("Error accessing media devices:", err);
             });
         }
 
         pc.ontrack = async (event) => {
-            if (receiveVideoRef.current) {
-                const mediaStream = new MediaStream([event.track]);
-                receiveVideoRef.current.srcObject = mediaStream;
-                receiveVideoRef.current.muted = false
-                try {
-                    receiveVideoRef.current.play().then(() => { }).catch((err) => { console.log("err rece", err) });
-                } catch (err) { }
+            if (event.track.kind === 'video') {
+                // Handle receiving video
+                if (receiveVideoRef.current) {
+                    const mediaStream = new MediaStream([event.track]);
+                    receiveVideoRef.current.srcObject = mediaStream;
+                    receiveVideoRef.current.muted = true;
+                    try {
+                        receiveVideoRef.current.play().catch((err) => { console.log("Error playing received video:", err); });
+                    } catch (err) {
+                        console.log("Error in video play:", err);
+                    }
+                }
+            } else if (event.track.kind === 'audio') {
+                // Handle receiving audio
+                if (audioRef.current) {
+                    const mediaStream = new MediaStream([event.track]);
+                    audioRef.current.srcObject = mediaStream;
+                    try {
+                        audioRef.current.play().catch((err) => { console.log("Error playing received audio:", err); });
+                    } catch (err) {
+                        console.log("Error in audio play:", err);
+                    }
+                }
             }
-        }
+        };
 
         socket.onmessage = async (event) => {
             const message: BroadCastVideoInfo = JSON.parse(event.data)
@@ -190,25 +213,10 @@ const ReceiveVideoRoom = () => {
                         </div>
                     </Card>
                 </main>
+                <audio ref={audioRef}></audio>
 
                 {/* Call controls */}
                 <div className="p-4 flex justify-center space-x-4">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setIsMuted(!isMuted)}
-                        className="bg-white hover:bg-gray-100"
-                    >
-                        {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setIsVideoOn(!isVideoOn)}
-                        className="bg-white hover:bg-gray-100"
-                    >
-                        {isVideoOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                    </Button>
                     <Button variant="destructive" size="icon">
                         <Phone className="h-4 w-4" />
                     </Button>
