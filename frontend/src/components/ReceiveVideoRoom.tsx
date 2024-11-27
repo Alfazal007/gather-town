@@ -1,19 +1,17 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { Card } from "./ui/card"
 import { Button } from "./ui/button"
-import { Mic, MicOff, Phone, Video, VideoOff } from "lucide-react"
+import { Phone } from "lucide-react"
 import { UserContext } from "@/context/UserContext"
 import { useNavigate, useParams } from "react-router-dom"
 import { BroadCastVideoInfo, BroadCastVideoType, VideoMessage, VideoType, JoinRoom, SDPType, Sdp, IceCandidate } from "@/types/VideoTypes"
 import ConnectingToCall from "./ConnectingCall"
 
 const ReceiveVideoRoom = () => {
-    const [isMuted, setIsMuted] = useState(false)
-    const [isVideoOn, setIsVideoOn] = useState(true)
     const [startedCall, setStartedCall] = useState(false)
     const { user } = useContext(UserContext)
     const navigate = useNavigate()
-    const VIDEOCALL_SOCKET = "ws://192.168.194.11:8001/video"
+    const VIDEOCALL_SOCKET = "ws://localhost:8001/video"
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const startedCallRef = useRef(startedCall);

@@ -149,8 +149,6 @@ func (vsManager *VideoRoomManager) CreateRoomForVideo(message types.VideoMessage
 }
 
 func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessage, conn *websocket.Conn, messageType int) {
-	fmt.Println("ice message in")
-
 	vsManager.Mutex.RLock()
 	defer vsManager.Mutex.RUnlock()
 	var messageOfIceCandidates types.IceCandidate
@@ -184,7 +182,6 @@ func (vsManager *VideoRoomManager) ForwardIceCandidates(message types.VideoMessa
 }
 
 func (vsManager *VideoRoomManager) ForwardSDPData(message types.VideoMessage, conn *websocket.Conn, messageType int) {
-	fmt.Println("sdp message in")
 	vsManager.Mutex.RLock()
 	defer vsManager.Mutex.RUnlock()
 	var messageOfIceCandidates types.Sdp
@@ -243,7 +240,6 @@ func (vsManager *VideoRoomManager) JoinRoomBySecondPerson(message types.VideoMes
 }
 
 func (vsManager *VideoRoomManager) DisconnectVideoCall(message types.VideoMessage, conn *websocket.Conn, messageType int) {
-	fmt.Println("called")
 	vsManager.Mutex.Lock()
 	defer vsManager.Mutex.Unlock()
 	room, roomExists := vsManager.RoomWithTwoPeople[message.Room]

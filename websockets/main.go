@@ -30,10 +30,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, wsManager *managers.WebSo
 		_ = conn.Close()
 	}()
 	for {
-		fmt.Println("town")
-		wsManager.Mutex.RLock()
-		fmt.Println(wsManager.RoomWithPeople)
-		wsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -79,10 +75,6 @@ func vsHandler(w http.ResponseWriter, r *http.Request, vsManager *managers.Video
 		_ = conn.Close()
 	}()
 	for {
-		fmt.Println("Vudei")
-		vsManager.Mutex.RLock()
-		fmt.Println(vsManager.RoomWithTwoPeople)
-		vsManager.Mutex.RUnlock()
 		t, message, err := conn.ReadMessage()
 		if err != nil {
 			break

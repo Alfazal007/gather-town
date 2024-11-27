@@ -36,7 +36,7 @@ export const Createroom = () => {
             setIsSending(true);
             console.log({ values })
             const res = await axios.post(
-                "http://192.168.194.11:8000/api/v1/room/create-room",
+                "http://localhost:8000/api/v1/room/create-room",
                 values,
                 {
                     headers: {

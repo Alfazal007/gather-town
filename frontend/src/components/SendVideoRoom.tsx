@@ -13,7 +13,7 @@ const SendVideoRoom = () => {
     const [startedCall, setStartedCall] = useState(false)
     const { user } = useContext(UserContext)
     const navigate = useNavigate()
-    const VIDEOCALL_SOCKET = "ws://192.168.194.11:8001/video"
+    const VIDEOCALL_SOCKET = "ws://localhost:8001/video"
     //    const VIDEOCALL_SOCKET = "ws://localhost:8001/video"
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)

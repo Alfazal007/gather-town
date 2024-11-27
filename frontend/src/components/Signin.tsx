@@ -41,7 +41,7 @@ export const SignIn = () => {
         try {
             setIsSending(true);
             const res = await axios.post(
-                "http://192.168.194.11:8000/api/v1/user/sign-in",
+                "http://localhost:8000/api/v1/user/sign-in",
                 values
             );
             console.log(res);
