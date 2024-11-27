@@ -17,7 +17,6 @@ const ReceiveVideoRoom = () => {
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const startedCallRef = useRef(startedCall);
-    const pcConn = new RTCPeerConnection()
 
     useEffect(() => {
         startedCallRef.current = startedCall;
@@ -65,23 +64,8 @@ const ReceiveVideoRoom = () => {
             const message: VideoMessage = JSON.parse(event.data)
             if (message.TypeOfMessage == VideoType.SDPRoomMessage) {
                 const messageData = message.Message as Sdp
-                await pcConn.setRemoteDescription(messageData.Data)
-                const answer = await pcConn.createAnswer()
-                await pcConn.setLocalDescription(answer)
-                const answerDataInternal: Sdp = {
-                    Message: SDPType.CreateAnswer,
-                    Data: answer
-                }
-                const answerToSend: VideoMessage = {
-                    Message: answerDataInternal,
-                    TypeOfMessage: VideoType.SDPRoomMessage,
-                    Room: sender + receiver,
-                    Username: user.username
-                }
-                ws.send(JSON.stringify(answerToSend))
             } else if (message.TypeOfMessage == VideoType.IceCandidateMessage) {
                 const data: IceCandidate = message.Message as IceCandidate
-                await pcConn.addIceCandidate(data.IceCandidate)
             }
         }
 
@@ -97,23 +81,13 @@ const ReceiveVideoRoom = () => {
             Username: user.username,
             Message: {}
         }
-        startReceiving()
         return () => {
             clearTimeout(timeout1);
             clearTimeout(timeout2);
             ws.send(JSON.stringify(disconnectMessage))
         };
     }, [])
-    function startReceiving() {
-        const video1 = document.createElement('video');
-        video1.autoplay = true;
-        document.body.appendChild(video1);
 
-        pcConn.ontrack = async (event) => {
-            video1.srcObject = new MediaStream([event.track]);
-            await video1.play();
-        };
-    }
     useEffect(() => {
         if (!socket) {
             return

@@ -17,7 +17,6 @@ const SendVideoRoom = () => {
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const startedCallRef = useRef(startedCall);
-    const [pc, setPc] = useState<RTCPeerConnection | null>(null)
 
     useEffect(() => {
         startedCallRef.current = startedCall;
@@ -36,38 +35,6 @@ const SendVideoRoom = () => {
         let timeout: NodeJS.Timeout
 
         const ws = new WebSocket(VIDEOCALL_SOCKET);
-        const pcConn = new RTCPeerConnection();
-
-        pcConn.onicecandidate = ((event) => {
-            const iceCandidate = event.candidate;
-            if (iceCandidate) {
-                const iceCandidateInternalMessage: IceCandidate = {
-                    IceCandidate: iceCandidate
-                }
-                const iceCandidateMessage: VideoMessage = {
-                    Message: iceCandidateInternalMessage,
-                    Room: sender + receiver,
-                    Username: sender,
-                    TypeOfMessage: VideoType.IceCandidateMessage
-                }
-                ws.send(JSON.stringify(iceCandidateMessage))
-            }
-        });
-        pcConn.onnegotiationneeded = async () => {
-            const offer = await pcConn.createOffer()
-            await pcConn.setLocalDescription(offer)
-            const createOfferInternalMessage: Sdp = {
-                Message: SDPType.CreateOffer,
-                Data: offer
-            }
-            const messageToBeSent: VideoMessage = {
-                Message: createOfferInternalMessage,
-                Username: sender,
-                Room: sender + receiver,
-                TypeOfMessage: VideoType.SDPRoomMessage
-            }
-            ws.send(JSON.stringify(messageToBeSent))
-        }
 
         ws.onopen = () => {
             setSocket(ws);
@@ -99,11 +66,9 @@ const SendVideoRoom = () => {
             Message: {}
         }
         setSocket(ws)
-        setPc(pcConn)
         ws.onclose = () => {
             ws.send(JSON.stringify(disconnectMessage))
             setSocket(null);
-            setPc(null)
             navigate("/")
         };
 
@@ -113,25 +78,12 @@ const SendVideoRoom = () => {
         }
     }, [])
 
-    const getCameraStreamAndSend = () => {
-        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            video.play();
-            // this is wrong, should propogate via a component
-            document.body.appendChild(video);
-            stream.getTracks().forEach((track) => {
-                pc?.addTrack(track);
-            });
-        });
-    }
-
     useEffect(() => {
         if (!socket) {
             return
         }
 
-        socket.onmessage = (event) => {
+        socket.onmessage = async (event) => {
             const message: BroadCastVideoInfo = JSON.parse(event.data);
             switch (message.TypeOfMessage) {
                 case BroadCastVideoType.CreateRoomResponse:
@@ -140,12 +92,16 @@ const SendVideoRoom = () => {
                     setStartedCall(true)
                     break
                 case BroadCastVideoType.IceCandidates:
+                    const iceCandidates: IceCandidate = message.Message as IceCandidate
                     break
                 case BroadCastVideoType.SDP:
+                    const sdpMessage = message.Message as Sdp
+                    if (sdpMessage.Message == SDPType.CreateAnswer) {
+                    } else if (sdpMessage.Message == SDPType.CreateOffer) {
+                    }
                     break
             }
         }
-
     }, [socket])
 
     return (
