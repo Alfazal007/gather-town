@@ -13,16 +13,24 @@ const SendVideoRoom = () => {
     const [startedCall, setStartedCall] = useState(false)
     const { user } = useContext(UserContext)
     const navigate = useNavigate()
-    const VIDEOCALL_SOCKET = "ws://localhost:8001/video"
+    const VIDEOCALL_SOCKET = "ws://192.168.194.11:8001/video"
+    //    const VIDEOCALL_SOCKET = "ws://localhost:8001/video"
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const startedCallRef = useRef(startedCall);
     const pc = new RTCPeerConnection()
     const sendVideoRef = useRef<HTMLVideoElement | null>(null);
+    const receiveVideoRef = useRef<HTMLVideoElement | null>(null);
 
     useEffect(() => {
         startedCallRef.current = startedCall;
     }, [startedCall])
+
+    useEffect(() => {
+        return () => {
+            pc.close()
+        }
+    }, [])
 
     useEffect(() => {
         if (!user || !sender || !receiver) {
@@ -113,16 +121,31 @@ const SendVideoRoom = () => {
         }
         getCameraStreamAndSend()
     }
+
     const getCameraStreamAndSend = () => {
-        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            if (sendVideoRef.current) {
-                sendVideoRef.current.srcObject = stream
-                sendVideoRef.current.play()
-            }
-            stream.getTracks().forEach((track) => {
-                pc?.addTrack(track);
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices.getUserMedia({
+                video: true
+            }).then((stream) => {
+                if (sendVideoRef.current) {
+                    sendVideoRef.current.srcObject = stream
+                    sendVideoRef.current.play()
+                }
+                stream.getTracks().forEach((track) => {
+                    pc?.addTrack(track);
+                });
             });
-        });
+        }
+        pc.ontrack = async (event) => {
+            if (receiveVideoRef.current) {
+                const mediaStream = new MediaStream([event.track]);
+                receiveVideoRef.current.srcObject = mediaStream;
+                try {
+                    await receiveVideoRef.current.play();
+                } catch (err) {
+                }
+            }
+        }
     }
 
     useEffect(() => {
@@ -138,9 +161,6 @@ const SendVideoRoom = () => {
                 case BroadCastVideoType.JoinRoomResponse:
                     setStartedCall(true)
                     await initializePC()
-                    break
-                case BroadCastVideoType.IceCandidates:
-                    const iceCandidates: IceCandidate = message.Message as IceCandidate
                     break
                 case BroadCastVideoType.SDP:
                     const sdpMessage = message.Message as Sdp
@@ -160,7 +180,7 @@ const SendVideoRoom = () => {
                     {/* Main participant video */}
                     <div className="h-full">
                         <div className="absolute inset-0 bg-black rounded-lg overflow-hidden">
-                            <video className="w-full h-full object-cover" />
+                            <video ref={receiveVideoRef} className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute bottom-4 left-4 text-white bg-black bg-opacity-50 px-2 py-1 rounded">
                             {receiver}

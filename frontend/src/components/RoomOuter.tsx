@@ -52,7 +52,7 @@ const RoomOuter = () => {
     }, [user])
 
     const fetchRoomData = async () => {
-        const url = `http://localhost:8000/api/v1/room/roomId/${roomId}`
+        const url = `http://192.168.194.11:8000/api/v1/room/roomId/${roomId}`
         const res = await axios.get(
             url,
             {
@@ -65,7 +65,7 @@ const RoomOuter = () => {
             navigate("/")
         }
         setRoomData(res.data)
-        const adminUrl = `http://localhost:8000/api/v1/user/get-admin/roomId/${roomId}`
+        const adminUrl = `http://192.168.194.11:8000/api/v1/user/get-admin/roomId/${roomId}`
         const adminRes = await axios.get(
             adminUrl,
             {
@@ -93,7 +93,7 @@ const RoomOuter = () => {
     }, [roomData])
 
     async function handleAddRoom() {
-        const url = "http://localhost:8000/api/v1/room/add-member"
+        const url = "http://192.168.194.11:8000/api/v1/room/add-member"
         try {
             const res = await axios.post(
                 url,
@@ -134,7 +134,7 @@ const RoomOuter = () => {
     }
 
     async function handleFindUser() {
-        const url = `http://localhost:8000/api/v1/user/username/${userToBeAdded}`
+        const url = `http://192.168.194.11:8000/api/v1/user/username/${userToBeAdded}`
         try {
             const res = await axios.get(
                 url,

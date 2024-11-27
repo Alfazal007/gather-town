@@ -138,6 +138,7 @@ func main() {
 	http.HandleFunc("/video", func(w http.ResponseWriter, r *http.Request) {
 		vsHandler(w, r, &vsManager)
 	})
-	err := http.ListenAndServe(":8001", nil)
+	err := http.ListenAndServe("0.0.0.0:8001", nil)
+	//	err := http.ListenAndServe(":8001", nil)
 	fmt.Println(err)
 }

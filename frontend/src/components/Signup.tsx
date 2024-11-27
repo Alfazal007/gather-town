@@ -43,7 +43,7 @@ export const SignUp = () => {
         try {
             setIsSending(true);
             const res = await axios.post(
-                "http://localhost:8000/api/v1/user/sign-up",
+                "http://192.168.194.11:8000/api/v1/user/sign-up",
                 values
             );
             console.log(res);

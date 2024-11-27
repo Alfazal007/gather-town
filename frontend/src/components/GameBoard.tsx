@@ -47,7 +47,8 @@ const GameBoard = () => {
     const { user } = useContext(UserContext)
     const navigate = useNavigate()
     const { roomId } = useParams()
-    const WS_URL = "ws://localhost:8001/ws";
+    //    const WS_URL = "ws://localhost:8001/ws";
+    const WS_URL = "ws://192.168.194.11:8001/ws";
     const [color, setColor] = useState("bg-red-600")
     const [messages, setMessages] = useState<TextMessageType[]>([])
     const [moveStarted, setMoveStarted] = useState<boolean>(false)

@@ -43,7 +43,8 @@ func main() {
 	r.Mount("/api/v1/user", router.UserRouter(&apiCfg))
 	r.Mount("/api/v1/room", router.RoomRouter(&apiCfg))
 	log.Println("Starting the server at port", envVariables.Port)
-	err = http.ListenAndServe(fmt.Sprintf(":%v", envVariables.Port), r)
+	//	err = http.ListenAndServe(fmt.Sprintf(":%v", envVariables.Port), r)
+	err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", envVariables.Port), r)
 	if err != nil {
 		log.Fatal("There was an error starting the server", err)
 	}

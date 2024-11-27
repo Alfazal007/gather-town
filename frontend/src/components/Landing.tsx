@@ -30,7 +30,7 @@ const Landing = () => {
     }, [user])
 
     const fetchRoomDetails = async () => {
-        const url = "http://localhost:8000/api/v1/user/get-rooms"
+        const url = "http://192.168.194.11:8000/api/v1/user/get-rooms"
         const res = await axios.get(
             url,
             {
