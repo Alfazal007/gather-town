@@ -107,6 +107,20 @@ const ReceiveVideoRoom = () => {
         }
     }, [socket])
 
+    const disconnectCall = () => {
+        const disconnectMessage: VideoMessage = {
+            TypeOfMessage: VideoType.DisconnectMessage,
+            Room: sender as string + receiver as string,
+            Username: user?.username as string,
+            Message: {}
+        }
+
+        socket?.send(JSON.stringify(disconnectMessage))
+        pc.close()
+        socket?.close()
+        navigate("/")
+    }
+
     function startReceiving(socket: WebSocket) {
         if (navigator.mediaDevices) {
             // Request both video and audio in a single getUserMedia call
@@ -217,7 +231,7 @@ const ReceiveVideoRoom = () => {
 
                 {/* Call controls */}
                 <div className="p-4 flex justify-center space-x-4">
-                    <Button variant="destructive" size="icon">
+                    <Button onClick={disconnectCall} variant="destructive" size="icon">
                         <Phone className="h-4 w-4" />
                     </Button>
                 </div>

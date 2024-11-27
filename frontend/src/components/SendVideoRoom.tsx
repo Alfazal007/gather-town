@@ -173,6 +173,20 @@ const SendVideoRoom = () => {
         };
     }
 
+    const disconnectCall = () => {
+        const disconnectMessage: VideoMessage = {
+            TypeOfMessage: VideoType.DisconnectMessage,
+            Room: sender as string + receiver as string,
+            Username: user?.username as string,
+            Message: {}
+        }
+
+        socket?.send(JSON.stringify(disconnectMessage))
+        pc.close()
+        socket?.close()
+        navigate("/")
+    }
+
     useEffect(() => {
         if (!socket) {
             return
@@ -223,7 +237,7 @@ const SendVideoRoom = () => {
                 <audio ref={audioRef}></audio>
                 {/* Call controls */}
                 <div className="p-4 flex justify-center space-x-4">
-                    <Button variant="destructive" size="icon">
+                    <Button onClick={disconnectCall} variant="destructive" size="icon">
                         <Phone className="h-4 w-4" />
                     </Button>
                 </div>
