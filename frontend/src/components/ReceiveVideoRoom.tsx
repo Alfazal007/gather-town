@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { Card } from "./ui/card"
 import { Button } from "./ui/button"
-import { Mic, MicOff, Phone, Video, VideoOff } from "lucide-react"
+import { Mic, MicOff, Phone, Pi, Video, VideoOff } from "lucide-react"
 import { UserContext } from "@/context/UserContext"
 import { useNavigate, useParams } from "react-router-dom"
 import { BroadCastVideoInfo, BroadCastVideoType, VideoMessage, VideoType, CreateRoom, JoinRoom, SDPType, Sdp, IceCandidate } from "@/types/VideoTypes"
@@ -17,6 +17,8 @@ const ReceiveVideoRoom = () => {
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const startedCallRef = useRef(startedCall);
+    const receiveVideoRef = useRef<HTMLVideoElement | null>(null);
+    const pc = new RTCPeerConnection();
 
     useEffect(() => {
         startedCallRef.current = startedCall;
@@ -60,14 +62,6 @@ const ReceiveVideoRoom = () => {
                 }
             }, 20000)
         };
-        ws.onmessage = async (event) => {
-            const message: VideoMessage = JSON.parse(event.data)
-            if (message.TypeOfMessage == VideoType.SDPRoomMessage) {
-                const messageData = message.Message as Sdp
-            } else if (message.TypeOfMessage == VideoType.IceCandidateMessage) {
-                const data: IceCandidate = message.Message as IceCandidate
-            }
-        }
 
         ws.onclose = () => {
             ws.send(JSON.stringify(disconnectMessage))
@@ -92,21 +86,63 @@ const ReceiveVideoRoom = () => {
         if (!socket) {
             return
         }
-
-        socket.onmessage = (event) => {
+        socket.onmessage = async (event) => {
             const message: BroadCastVideoInfo = JSON.parse(event.data);
             switch (message.TypeOfMessage) {
                 case BroadCastVideoType.JoinRoomResponse:
                     setStartedCall(true)
-                    break
-                case BroadCastVideoType.IceCandidates:
-                    break
-                case BroadCastVideoType.SDP:
+                    startReceiving(socket)
                     break
             }
         }
-
     }, [socket])
+
+    function startReceiving(socket: WebSocket) {
+
+        const video = document.createElement('video');
+        document.body.appendChild(video);
+
+        pc.ontrack = async (event) => {
+            if (receiveVideoRef.current) {
+                const mediaStream = new MediaStream([event.track]);
+                receiveVideoRef.current.srcObject = mediaStream;
+                await receiveVideoRef.current.play();
+            }
+        }
+
+        socket.onmessage = async (event) => {
+            const message: BroadCastVideoInfo = JSON.parse(event.data)
+            switch (message.TypeOfMessage) {
+
+                case BroadCastVideoType.IceCandidates:
+                    const iceCandidates: IceCandidate = message.Message as IceCandidate
+                    await pc.addIceCandidate(iceCandidates.IceCandidate)
+                    break
+
+                case BroadCastVideoType.SDP:
+                    const sdpMessage = message.Message as Sdp
+                    if (sdpMessage.Message == SDPType.CreateOffer) {
+                        await pc.setRemoteDescription(sdpMessage.Data)
+                        const answer = await pc?.createAnswer()
+                        if (answer) {
+                            const sdpAnswer: Sdp = {
+                                Message: SDPType.CreateAnswer,
+                                Data: answer
+                            }
+                            const externalMessage: VideoMessage = {
+                                Username: user?.username as string,
+                                Room: sender as string + receiver as string,
+                                TypeOfMessage: VideoType.SDPRoomMessage,
+                                Message: sdpAnswer
+                            }
+                            await pc.setLocalDescription(answer)
+                            socket.send(JSON.stringify(externalMessage))
+                        }
+                    }
+                    break
+            }
+        }
+    }
 
     return (
         startedCall ?
@@ -115,10 +151,7 @@ const ReceiveVideoRoom = () => {
                     {/* Main participant video */}
                     <div className="h-full">
                         <div className="absolute inset-0 bg-black rounded-lg overflow-hidden">
-                            <video className="w-full h-full object-cover" autoPlay muted loop>
-                                <source src="/placeholder.svg?height=720&width=1280" type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
+                            <video ref={receiveVideoRef} className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute bottom-4 left-4 text-white bg-black bg-opacity-50 px-2 py-1 rounded">
                             {sender}
@@ -126,8 +159,7 @@ const ReceiveVideoRoom = () => {
                     </div>
 
                     <Card className="absolute top-4 right-4 w-48 h-36 overflow-hidden">
-                        <video className="w-full h-full object-cover" autoPlay muted loop>
-                            Your browser does not support the video tag.
+                        <video className="w-full h-full object-cover">
                         </video>
                         <div className="absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                             You

@@ -17,6 +17,8 @@ const SendVideoRoom = () => {
     const { sender, receiver } = useParams()
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const startedCallRef = useRef(startedCall);
+    const pc = new RTCPeerConnection()
+    const sendVideoRef = useRef<HTMLVideoElement | null>(null);
 
     useEffect(() => {
         startedCallRef.current = startedCall;
@@ -78,6 +80,51 @@ const SendVideoRoom = () => {
         }
     }, [])
 
+    async function initializePC() {
+        pc.onnegotiationneeded = async () => {
+            const offer = await pc.createOffer()
+            await pc.setLocalDescription(offer)
+            const offerMessageInternal: Sdp = {
+                Message: SDPType.CreateOffer,
+                Data: offer
+            }
+            const offerMessageExternal: VideoMessage = {
+                Message: offerMessageInternal,
+                Room: sender as string + receiver as string,
+                TypeOfMessage: VideoType.SDPRoomMessage,
+                Username: user?.username as string
+            }
+            socket?.send(JSON.stringify(offerMessageExternal))
+        }
+        pc.onicecandidate = (event) => {
+            const candidate = event.candidate;
+            if (candidate) {
+                const iceCandidateInternalMessage: IceCandidate = {
+                    IceCandidate: candidate
+                }
+                const iceCandidateExternalMessage: VideoMessage = {
+                    Username: user?.username as string,
+                    TypeOfMessage: VideoType.IceCandidateMessage,
+                    Room: sender as string + receiver as string,
+                    Message: iceCandidateInternalMessage
+                }
+                socket?.send(JSON.stringify(iceCandidateExternalMessage))
+            }
+        }
+        getCameraStreamAndSend()
+    }
+    const getCameraStreamAndSend = () => {
+        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+            if (sendVideoRef.current) {
+                sendVideoRef.current.srcObject = stream
+                sendVideoRef.current.play()
+            }
+            stream.getTracks().forEach((track) => {
+                pc?.addTrack(track);
+            });
+        });
+    }
+
     useEffect(() => {
         if (!socket) {
             return
@@ -90,6 +137,7 @@ const SendVideoRoom = () => {
                     break
                 case BroadCastVideoType.JoinRoomResponse:
                     setStartedCall(true)
+                    await initializePC()
                     break
                 case BroadCastVideoType.IceCandidates:
                     const iceCandidates: IceCandidate = message.Message as IceCandidate
@@ -97,6 +145,7 @@ const SendVideoRoom = () => {
                 case BroadCastVideoType.SDP:
                     const sdpMessage = message.Message as Sdp
                     if (sdpMessage.Message == SDPType.CreateAnswer) {
+                        await pc.setRemoteDescription(sdpMessage.Data)
                     } else if (sdpMessage.Message == SDPType.CreateOffer) {
                     }
                     break
@@ -111,8 +160,7 @@ const SendVideoRoom = () => {
                     {/* Main participant video */}
                     <div className="h-full">
                         <div className="absolute inset-0 bg-black rounded-lg overflow-hidden">
-                            <video className="w-full h-full object-cover" autoPlay muted loop>
-                            </video>
+                            <video className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute bottom-4 left-4 text-white bg-black bg-opacity-50 px-2 py-1 rounded">
                             {receiver}
@@ -120,7 +168,7 @@ const SendVideoRoom = () => {
                     </div>
 
                     <Card className="absolute top-4 right-4 w-48 h-36 overflow-hidden">
-                        <video className="w-full h-full object-cover" autoPlay muted loop>
+                        <video ref={sendVideoRef} className="w-full h-full object-cover">
                         </video>
                         <div className="absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                             You
